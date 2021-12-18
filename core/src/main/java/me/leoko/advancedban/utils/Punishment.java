@@ -1,5 +1,8 @@
 package me.leoko.advancedban.utils;
 
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 import me.leoko.advancedban.MethodInterface;
 import me.leoko.advancedban.Universal;
 import me.leoko.advancedban.manager.DatabaseManager;
@@ -17,33 +20,44 @@ import java.util.List;
 /**
  * Created by Leoko @ dev.skamps.eu on 30.05.2016.
  */
+@Builder
+@Getter
 public class Punishment {
 
     private static final MethodInterface mi = Universal.get().getMethods();
-    private final String name, uuid, operator, calculation;
-    private final long start, end;
+    private final String uuid;
+    private final String name;
+    private final String operator;
+    private final String calculation;
+    private final long start;
+    private final long end;
     private final PunishmentType type;
-
     private String reason;
     private int id;
 
-    public Punishment(String name, String uuid, String reason, String operator, PunishmentType type, long start, long end, String calculation, int id) {
-        this.name = name;
-        this.uuid = uuid;
-        this.reason = reason;
-        this.operator = operator;
-        this.type = type;
-        this.start = start;
-        this.end = end;
-        this.calculation = calculation;
-        this.id = id;
-    }
+    public static Punishment create(String name,
+                              String target,
+                              String reason,
+                              String operator,
+                              PunishmentType type,
+                              Long end,
+                              String calculation,
+                              boolean silent) {
+        Punishment punishment = Punishment.builder()
+                .name(name)
+                .uuid(target)
+                .reason(reason)
+                .operator(operator)
+                .type(end == -1 ? type.getPermanent() : type)
+                .start(TimeManager.getTime())
+                .end(end)
+                .calculation(calculation)
+                .id(-1)
+                .build();
 
-    public static void create(String name, String target, String reason, String operator, PunishmentType type, Long end,
-                              String calculation, boolean silent) {
-        new Punishment(name, target, reason, operator, end == -1 ? type.getPermanent() : type,
-                TimeManager.getTime(), end, calculation, -1)
-                .create(silent);
+        punishment.create(silent);
+
+        return punishment;
     }
 
     public String getReason() {
@@ -66,13 +80,13 @@ public class Punishment {
     public void create(boolean silent) {
         if (id != -1) {
             Universal.get().log("!! Failed! AB tried to overwrite the punishment:");
-            Universal.get().log("!! Failed at: " + toString());
+            Universal.get().log("!! Failed at: " + this);
             return;
         }
 
         if (uuid == null) {
             Universal.get().log("!! Failed! AB has not saved the " + getType().getName() + " because there is no fetched UUID");
-            Universal.get().log("!! Failed at: " + toString());
+            Universal.get().log("!! Failed at: " + this);
             return;
         }
 
@@ -88,7 +102,7 @@ public class Punishment {
                         id = rs.getInt("id");
                     } else {
                         Universal.get().log("!! Not able to update ID of punishment! Please restart the server to resolve this issue!");
-                        Universal.get().log("!! Failed at: " + toString());
+                        Universal.get().log("!! Failed at: " + this);
                     }
                 }
             } catch (SQLException ex) {
@@ -126,7 +140,9 @@ public class Punishment {
                 }
             }
             if (cmd != null) {
-                final String finalCmd = cmd.replaceAll("%PLAYER%", getName()).replaceAll("%COUNT%", cWarnings + "").replaceAll("%REASON%", getReason());
+                final String finalCmd = cmd.replaceAll("%PLAYER%", getName())
+                        .replaceAll("%COUNT%", cWarnings + "")
+                        .replaceAll("%REASON%", getReason());
                 mi.runSync(() -> {
                     mi.executeCommand(finalCmd);
                     Universal.get().log("Executing command: " + finalCmd);
@@ -171,7 +187,7 @@ public class Punishment {
 
         if (id == -1) {
             Universal.get().log("!! Failed deleting! The Punishment is not created yet!");
-            Universal.get().log("!! Failed at: " + toString());
+            Universal.get().log("!! Failed at: " + this);
             return;
         }
 
@@ -256,38 +272,6 @@ public class Punishment {
 
     public boolean isExpired() {
         return getType().isTemp() && getEnd() <= TimeManager.getTime();
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public String getUuid() {
-        return this.uuid;
-    }
-
-    public String getOperator() {
-        return this.operator;
-    }
-
-    public String getCalculation() {
-        return this.calculation;
-    }
-
-    public long getStart() {
-        return this.start;
-    }
-
-    public long getEnd() {
-        return this.end;
-    }
-
-    public PunishmentType getType() {
-        return this.type;
-    }
-
-    public int getId() {
-        return this.id;
     }
 
     public String toString() {

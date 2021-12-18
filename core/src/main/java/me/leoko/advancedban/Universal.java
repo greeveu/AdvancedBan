@@ -1,6 +1,7 @@
 package me.leoko.advancedban;
 
 import com.google.gson.Gson;
+import lombok.Setter;
 import me.leoko.advancedban.manager.*;
 import me.leoko.advancedban.utils.Command;
 import me.leoko.advancedban.utils.InterimData;
@@ -30,22 +31,14 @@ public class Universal {
 
     private static Universal instance = null;
 
-    public static void setRedis(boolean redis) {
-        Universal.redis = redis;
-    }
-
     private final Map<String, String> ips = new HashMap<>();
     private MethodInterface mi;
     private LogManager logManager;
 
+    @Setter
     private static boolean redis = false;
 
-
     private final Gson gson = new Gson();
-
-
-
-
 
     /**
      * Get universal.
@@ -263,25 +256,6 @@ public class Universal {
             }
         }
         return false;
-    }
-
-    /**
-     * Broadcast leoko boolean.
-     *
-     * @return the boolean
-     */
-    public boolean broadcastLeoko() {
-        File readme = new File(getMethods().getDataFolder(), "readme.txt");
-        if (!readme.exists()) {
-            return true;
-        }
-        try {
-            if (Files.readAllLines(Paths.get(readme.getPath()), Charset.defaultCharset()).get(0).equalsIgnoreCase("I don't want that there will be any message when the dev of this plugin joins the server! I want this even though the plugin is 100% free and the join-message is the only reward for the Dev :(")) {
-                return false;
-            }
-        } catch (IOException ignore) {
-        }
-        return true;
     }
 
     /**

@@ -4,7 +4,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.imaginarycode.minecraft.redisbungee.RedisBungee;
 import me.leoko.advancedban.MethodInterface;
 import me.leoko.advancedban.Universal;
 import me.leoko.advancedban.bungee.event.PunishmentEvent;
@@ -187,7 +186,7 @@ public class BungeeMethods implements MethodInterface {
 
     @Override
     public Permissionable getOfflinePermissionPlayer(String name) {
-        if(luckPermsSupport) return new LuckPermsOfflineUser(name);
+        if (luckPermsSupport) return new LuckPermsOfflineUser(name);
 
         return permission -> false;
     }
@@ -216,10 +215,11 @@ public class BungeeMethods implements MethodInterface {
 
     @Override
     public void kickPlayer(String player, String reason) {
-        if(BungeeMain.getCloudSupport() != null){
+        if (BungeeMain.getCloudSupport() != null) {
             BungeeMain.getCloudSupport().kick(getPlayer(player).getUniqueId(), reason);
-        }else if (Universal.isRedis()) {
-            RedisBungee.getApi().sendChannelMessage("advancedban:main", "kick " + player + " " + reason);
+        } else if (Universal.isRedis()) {
+            Universal.get().getMethods().runAsync(
+                    () -> BungeeMain.getInstance().getJedisPool().getResource().publish("advancedban:main:v1", "kick " + player + " " + reason));
         } else {
             getPlayer(player).disconnect(TextComponent.fromLegacyText(reason));
         }
@@ -246,6 +246,9 @@ public class BungeeMethods implements MethodInterface {
     }
 
     @Override
+    /**
+     * WARNING not Sync to Main-Thread
+     */
     public void runSync(Runnable rn) {
         rn.run(); //TODO WARNING not Sync to Main-Thread
     }
@@ -408,7 +411,10 @@ public class BungeeMethods implements MethodInterface {
     @Override
     public void notify(String perm, List<String> notification) {
         if (Universal.isRedis()) {
-            notification.forEach((str) -> RedisBungee.getApi().sendChannelMessage("advancedban:main", "notification " + perm + " " + str));
+            notification
+                    .forEach((str) -> Universal.get().getMethods()
+                            .runAsync(() -> BungeeMain.getInstance().getJedisPool().getResource()
+                                    .publish("advancedban:main:v1", "notification " + perm + " " + str)));
         } else {
             ProxyServer.getInstance().getPlayers()
                     .stream()

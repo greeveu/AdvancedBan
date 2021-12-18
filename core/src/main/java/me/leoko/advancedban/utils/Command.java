@@ -513,7 +513,7 @@ public enum Command {
                 mi.sendMessage(sender, "  §cStorage §8• §7" + (DatabaseManager.get().isUseMySQL() ? "MySQL (external)" : "HSQLDB (local)"));
                 mi.sendMessage(sender, "  §cServer §8• §7" + (Universal.get().isBungee() ? "Bungeecord" : "Spigot/Bukkit"));
                 if (Universal.get().isBungee()) {
-                    mi.sendMessage(sender, "  §cRedisBungee §8• §7" + (Universal.isRedis() ? "true" : "false"));
+                    mi.sendMessage(sender, "  §cRedis §8• §7" + (Universal.isRedis() ? "true" : "false"));
                 }
                 mi.sendMessage(sender, "  §cUUID-Mode §8• §7" + UUIDManager.get().getMode());
                 mi.sendMessage(sender, "  §cPrefix §8• §7" + (mi.getBoolean(mi.getConfig(), "Disable Prefix", false) ? "" : MessageManager.getMessage("General.Prefix")));

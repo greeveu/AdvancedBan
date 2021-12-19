@@ -104,8 +104,7 @@ public enum Command {
             new PunishmentTabCompleter(false),
             input -> {
                 if (!Universal.get().getMethods().isOnline(input.getPrimaryData())) {
-                    MessageManager.sendMessage(input.getSender(), "Kick.NotOnline", true,
-                            "NAME", input.getPrimary());
+                    MessageManager.sendMessage(input.getSender(), "Kick.NotOnline", true, "NAME", input.getPrimary());
                     return;
                 }
 

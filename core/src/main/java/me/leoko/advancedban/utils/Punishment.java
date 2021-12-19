@@ -1,5 +1,6 @@
 package me.leoko.advancedban.utils;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,14 +36,26 @@ public class Punishment {
     private String reason;
     private int id;
 
+    public Punishment(String name, String uuid, String reason, String operator, PunishmentType type, long start, long end, String calculation, int id) {
+        this.name = name;
+        this.uuid = uuid;
+        this.reason = reason;
+        this.operator = operator;
+        this.type = type;
+        this.start = start;
+        this.end = end;
+        this.calculation = calculation;
+        this.id = id;
+    }
+
     public static Punishment create(String name,
-                              String target,
-                              String reason,
-                              String operator,
-                              PunishmentType type,
-                              Long end,
-                              String calculation,
-                              boolean silent) {
+                                    String target,
+                                    String reason,
+                                    String operator,
+                                    PunishmentType type,
+                                    Long end,
+                                    String calculation,
+                                    boolean silent) {
         Punishment punishment = Punishment.builder()
                 .name(name)
                 .uuid(target)
@@ -120,10 +133,11 @@ public class Punishment {
             if (getType().getBasic() == PunishmentType.BAN || getType() == PunishmentType.KICK) {
                 mi.runSync(() -> mi.kickPlayer(getName(), getLayoutBSN()));
             } else {
-                if (getType().getBasic() != PunishmentType.NOTE)
+                if (getType().getBasic() != PunishmentType.NOTE) {
                     for (String str : getLayout()) {
                         mi.sendMessage(p, str);
                     }
+                }
                 PunishmentManager.get().getLoadedPunishments(false).add(this);
             }
         }

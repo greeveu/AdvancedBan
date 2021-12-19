@@ -119,7 +119,7 @@ public class PunishmentProcessor implements Consumer<Command.CommandInput> {
         MethodInterface mi = Universal.get().getMethods();
         String dataName = name.toLowerCase();
 
-        boolean exempt = false;
+        boolean exempt;
         if (mi.isOnline(dataName)) {
             Object onlineTarget = mi.getPlayer(dataName);
             exempt = canNotPunish((perms) -> mi.hasPerms(sender, perms), (perms) -> mi.hasPerms(onlineTarget, perms), type.getName());

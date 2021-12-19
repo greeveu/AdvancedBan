@@ -26,6 +26,7 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import org.bstats.bungeecord.Metrics;
+import redis.clients.jedis.JedisPubSub;
 
 import java.io.File;
 import java.io.IOException;
@@ -160,7 +161,7 @@ public class BungeeMethods implements MethodInterface {
 
     @Override
     public Plugin getPlugin() {
-        return BungeeMain.get();
+        return BungeeMain.getInstance();
     }
 
     @Override
@@ -193,18 +194,17 @@ public class BungeeMethods implements MethodInterface {
 
     @Override
     public boolean isOnline(String name) {
+        boolean onlineOnThisServer = false;
         try {
-            if (Universal.isRedis()) {
-                for (String str : RedisBungee.getApi().getHumanPlayersOnline()) {
-                    if (str.equalsIgnoreCase(name)) {
-                        return RedisBungee.getApi().getPlayerIp(RedisBungee.getApi().getUuidFromName(str)) != null;
-                    }
-                }
-            }
-            return getPlayer(name).getAddress() != null;
-        } catch (NullPointerException exc) {
-            return false;
+            onlineOnThisServer = getPlayer(name).getAddress() != null;
+        } catch (NullPointerException ignored) {
         }
+
+        if (onlineOnThisServer) {
+            return true;
+        }
+
+        return BungeeMain.getInstance().getJedisPool().getResource().exists("advancedban:onlineplayer:" + name);
     }
 
     @Override
@@ -217,12 +217,14 @@ public class BungeeMethods implements MethodInterface {
     public void kickPlayer(String player, String reason) {
         if (BungeeMain.getCloudSupport() != null) {
             BungeeMain.getCloudSupport().kick(getPlayer(player).getUniqueId(), reason);
-        } else if (Universal.isRedis()) {
+            return;
+        }
+        if (Universal.isRedis()) {
             Universal.get().getMethods().runAsync(
                     () -> BungeeMain.getInstance().getJedisPool().getResource().publish("advancedban:main:v1", "kick " + player + " " + reason));
-        } else {
-            getPlayer(player).disconnect(TextComponent.fromLegacyText(reason));
+            return;
         }
+        getPlayer(player).disconnect(TextComponent.fromLegacyText(reason));
     }
 
     @Override

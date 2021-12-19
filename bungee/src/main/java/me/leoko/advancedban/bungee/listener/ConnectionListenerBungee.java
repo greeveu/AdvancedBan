@@ -16,13 +16,13 @@ import net.md_5.bungee.event.EventPriority;
 public class ConnectionListenerBungee implements Listener {
 
     @SuppressWarnings("deprecation")
-	@EventHandler(priority = EventPriority.LOW)
+    @EventHandler(priority = EventPriority.LOW)
     public void onConnection(LoginEvent event) {
-        if(event.isCancelled())
+        if (event.isCancelled())
             return;
 
         UUIDManager.get().supplyInternUUID(event.getConnection().getName(), event.getConnection().getUniqueId());
-        event.registerIntent((BungeeMain)Universal.get().getMethods().getPlugin());
+        event.registerIntent((BungeeMain) Universal.get().getMethods().getPlugin());
         Universal.get().getMethods().runAsync(() -> {
             String result = Universal.get().callConnection(event.getConnection().getName(), event.getConnection().getAddress().getAddress().getHostAddress());
 
@@ -36,9 +36,11 @@ public class ConnectionListenerBungee implements Listener {
             }
 
             if (Universal.isRedis()) {
-                Universal.get().getMethods().runAsync(() -> BungeeMain.getInstance().getJedisPool().getResource()
-                        .publish("advancedban:connection:v1",
-                                event.getConnection().getName() + "," + event.getConnection().getAddress().getAddress().getHostAddress()));
+                Universal.get().getMethods().runAsync(() -> {
+                    BungeeMain.getInstance().getJedisPool().getResource().publish("advancedban:connection:v1",
+                            event.getConnection().getName() + "," + event.getConnection().getAddress().getAddress().getHostAddress());
+                    BungeeMain.getInstance().getJedisPool().getResource().set("advancedban:onlineplayer:" + event.getConnection().getName(), "1"); //TODO: Check what happens if he join on the server while he is still online.
+                });
             }
             event.completeIntent((BungeeMain) Universal.get().getMethods().getPlugin());
         });
@@ -49,6 +51,7 @@ public class ConnectionListenerBungee implements Listener {
         Universal.get().getMethods().runAsync(() -> {
             if (event.getPlayer() != null) {
                 PunishmentManager.get().discard(event.getPlayer().getName());
+                BungeeMain.getInstance().getJedisPool().getResource().del("advancedban:onlineplayer:" + event.getPlayer().getUniqueId()); //TODO: Check what happens if he join on the server while he is still online.
             }
         });
     }

@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.leoko.advancedban.MethodInterface;
 import me.leoko.advancedban.Universal;
+import me.leoko.advancedban.bungee.event.NotificationEvent;
 import me.leoko.advancedban.bungee.event.PunishmentEvent;
 import me.leoko.advancedban.bungee.event.RevokePunishmentEvent;
 import me.leoko.advancedban.bungee.listener.CommandReceiverBungee;
@@ -28,7 +29,6 @@ import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import org.bstats.bungeecord.Metrics;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPubSub;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,9 +38,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -183,6 +180,14 @@ public class BungeeMethods implements MethodInterface {
     @SuppressWarnings("deprecation")
     @Override
     public void sendMessage(Object player, String msg) {
+
+        if (player instanceof ProxiedPlayer) {
+            NotificationEvent notificationEvent = new NotificationEvent((ProxiedPlayer) player, msg);
+            getPlugin().getProxy().getPluginManager().callEvent(notificationEvent);
+
+            if (notificationEvent.isCancelled()) return;
+        }
+
         ((CommandSender) player).sendMessage(msg);
     }
 

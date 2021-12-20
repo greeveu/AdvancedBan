@@ -21,7 +21,6 @@ import java.util.List;
 /**
  * Created by Leoko @ dev.skamps.eu on 30.05.2016.
  */
-@Builder
 @Getter
 public class Punishment {
 
@@ -48,29 +47,11 @@ public class Punishment {
         this.id = id;
     }
 
-    public static Punishment create(String name,
-                                    String target,
-                                    String reason,
-                                    String operator,
-                                    PunishmentType type,
-                                    Long end,
-                                    String calculation,
-                                    boolean silent) {
-        Punishment punishment = Punishment.builder()
-                .name(name)
-                .uuid(target)
-                .reason(reason)
-                .operator(operator)
-                .type(end == -1 ? type.getPermanent() : type)
-                .start(TimeManager.getTime())
-                .end(end)
-                .calculation(calculation)
-                .id(-1)
-                .build();
-
-        punishment.create(silent);
-
-        return punishment;
+    public static void create(String name, String target, String reason, String operator, PunishmentType type, Long end,
+                              String calculation, boolean silent) {
+        new Punishment(name, target, reason, operator, end == -1 ? type.getPermanent() : type,
+                TimeManager.getTime(), end, calculation, -1)
+                .create(silent);
     }
 
     public String getReason() {
@@ -127,42 +108,44 @@ public class Punishment {
             announce(cWarnings);
         }
 
-        if (mi.isOnline(getName())) {
-            final Object p = mi.getPlayer(getName());
+        mi.isOnline(getName(), isPlayerOnline -> {
+            if (isPlayerOnline) {
+                final Object p = mi.getPlayer(getName());
 
-            if (getType().getBasic() == PunishmentType.BAN || getType() == PunishmentType.KICK) {
-                mi.runSync(() -> mi.kickPlayer(getName(), getLayoutBSN()));
-            } else {
-                if (getType().getBasic() != PunishmentType.NOTE) {
-                    for (String str : getLayout()) {
-                        mi.sendMessage(p, str);
+                if (getType().getBasic() == PunishmentType.BAN || getType() == PunishmentType.KICK) {
+                    mi.runSync(() -> mi.kickPlayer(getName(), getLayoutBSN()));
+                } else {
+                    if (getType().getBasic() != PunishmentType.NOTE) {
+                        for (String str : getLayout()) {
+                            mi.sendMessage(p, str);
+                        }
+                    }
+                    PunishmentManager.get().getLoadedPunishments(false).add(this);
+                }
+            }
+
+            PunishmentManager.get().getLoadedHistory().add(this);
+
+            mi.callPunishmentEvent(this);
+
+            if (getType().getBasic() == PunishmentType.WARNING) {
+                String cmd = null;
+                for (int i = 1; i <= cWarnings; i++) {
+                    if (mi.contains(mi.getConfig(), "WarnActions." + i)) {
+                        cmd = mi.getString(mi.getConfig(), "WarnActions." + i);
                     }
                 }
-                PunishmentManager.get().getLoadedPunishments(false).add(this);
-            }
-        }
-
-        PunishmentManager.get().getLoadedHistory().add(this);
-
-        mi.callPunishmentEvent(this);
-
-        if (getType().getBasic() == PunishmentType.WARNING) {
-            String cmd = null;
-            for (int i = 1; i <= cWarnings; i++) {
-                if (mi.contains(mi.getConfig(), "WarnActions." + i)) {
-                    cmd = mi.getString(mi.getConfig(), "WarnActions." + i);
+                if (cmd != null) {
+                    final String finalCmd = cmd.replaceAll("%PLAYER%", getName())
+                            .replaceAll("%COUNT%", cWarnings + "")
+                            .replaceAll("%REASON%", getReason());
+                    mi.runSync(() -> {
+                        mi.executeCommand(finalCmd);
+                        Universal.get().log("Executing command: " + finalCmd);
+                    });
                 }
             }
-            if (cmd != null) {
-                final String finalCmd = cmd.replaceAll("%PLAYER%", getName())
-                        .replaceAll("%COUNT%", cWarnings + "")
-                        .replaceAll("%REASON%", getReason());
-                mi.runSync(() -> {
-                    mi.executeCommand(finalCmd);
-                    Universal.get().log("Executing command: " + finalCmd);
-                });
-            }
-        }
+        });
     }
 
     public void updateReason(String reason) {

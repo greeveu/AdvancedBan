@@ -7,6 +7,8 @@ import me.leoko.advancedban.utils.tabcompletion.TabCompleter;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 
 /**
  * The Method Interface is used to define universal actions which are dependent on the server software used.
@@ -165,7 +167,7 @@ public interface MethodInterface {
      * @param name the name
      * @return the boolean
      */
-    boolean isOnline(String name);
+    void isOnline(String name, Consumer<Boolean> callback);
 
     /**
      * Get online player by name.

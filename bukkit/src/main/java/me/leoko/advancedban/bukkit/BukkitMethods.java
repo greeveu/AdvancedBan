@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 /**
  * Created by Leoko @ dev.skamps.eu on 23.07.2016.
@@ -194,8 +195,8 @@ public class BukkitMethods implements MethodInterface {
 
     @SuppressWarnings("deprecation")
     @Override
-    public boolean isOnline(String name) {
-        return Bukkit.getOfflinePlayer(name).isOnline();
+    public void isOnline(String name, Consumer<Boolean> callback) {
+        callback.accept(Bukkit.getOfflinePlayer(name).isOnline());
     }
 
     @Override

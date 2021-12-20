@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -133,8 +134,8 @@ public class TestMethods implements MethodInterface {
     }
 
     @Override
-    public boolean isOnline(String name) {
-        return false;
+    public void isOnline(String name, Consumer<Boolean> callback) {
+        callback.accept(false);
     }
 
     @Override

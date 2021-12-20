@@ -103,12 +103,14 @@ public enum Command {
             ".+",
             new PunishmentTabCompleter(false),
             input -> {
-                if (!Universal.get().getMethods().isOnline(input.getPrimaryData())) {
-                    MessageManager.sendMessage(input.getSender(), "Kick.NotOnline", true, "NAME", input.getPrimary());
-                    return;
-                }
+                Universal.get().getMethods().isOnline(input.getPrimaryData(), isOnline -> {
+                    if (!isOnline) {
+                        MessageManager.sendMessage(input.getSender(), "Kick.NotOnline", true, "NAME", input.getPrimary());
+                        return;
+                    }
 
-                new PunishmentProcessor(PunishmentType.KICK).accept(input);
+                    new PunishmentProcessor(PunishmentType.KICK).accept(input);
+                });
             },
             PunishmentType.KICK.getConfSection("Usage"),
             "kick"),

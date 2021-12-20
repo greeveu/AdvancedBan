@@ -9,6 +9,7 @@ import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
+import redis.clients.jedis.Jedis;
 
 /**
  * Created by Leoko @ dev.skamps.eu on 24.07.2016.
@@ -37,9 +38,10 @@ public class ConnectionListenerBungee implements Listener {
 
             if (Universal.isRedis()) {
                 Universal.get().getMethods().runAsync(() -> {
-                    BungeeMain.getInstance().getJedisPool().getResource().publish("advancedban:connection:v1",
-                            event.getConnection().getName() + "," + event.getConnection().getAddress().getAddress().getHostAddress());
-                    BungeeMain.getInstance().getJedisPool().getResource().set("advancedban:onlineplayer:" + event.getConnection().getName(), "1"); //TODO: Check what happens if he join on the server while he is still online.
+                    try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
+                        jedis.publish("advancedban:connection:v1",
+                                event.getConnection().getName() + "," + event.getConnection().getAddress().getAddress().getHostAddress());
+                    }
                 });
             }
             event.completeIntent((BungeeMain) Universal.get().getMethods().getPlugin());
@@ -51,7 +53,6 @@ public class ConnectionListenerBungee implements Listener {
         Universal.get().getMethods().runAsync(() -> {
             if (event.getPlayer() != null) {
                 PunishmentManager.get().discard(event.getPlayer().getName());
-                BungeeMain.getInstance().getJedisPool().getResource().del("advancedban:onlineplayer:" + event.getPlayer().getUniqueId()); //TODO: Check what happens if he join on the server while he is still online.
             }
         });
     }

@@ -136,3 +136,8 @@ Disable Prefix: false
 # Off by default, so AdvancedBan can override /ban from other plugins
 # This is a Bukkit-specific option. It has no meaning on BungeeCord
 Friendly Register Commands: false
+
+redis:
+  enabled: false
+  host: localhost
+  port: 6379

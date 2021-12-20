@@ -9,6 +9,7 @@ import me.leoko.advancedban.Universal;
 import me.leoko.advancedban.bungee.event.PunishmentEvent;
 import me.leoko.advancedban.bungee.event.RevokePunishmentEvent;
 import me.leoko.advancedban.bungee.listener.CommandReceiverBungee;
+import me.leoko.advancedban.bungee.listener.PubSubMessageListener;
 import me.leoko.advancedban.bungee.utils.LuckPermsOfflineUser;
 import me.leoko.advancedban.manager.DatabaseManager;
 import me.leoko.advancedban.manager.PunishmentManager;
@@ -26,6 +27,7 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import org.bstats.bungeecord.Metrics;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
 import java.io.File;
@@ -36,7 +38,11 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Created by Leoko @ dev.skamps.eu on 23.07.2016.
@@ -193,7 +199,8 @@ public class BungeeMethods implements MethodInterface {
     }
 
     @Override
-    public boolean isOnline(String name) {
+    public void isOnline(String name, Consumer<Boolean> callback) {
+        //Check if the player is on the local server
         boolean onlineOnThisServer = false;
         try {
             onlineOnThisServer = getPlayer(name).getAddress() != null;
@@ -201,10 +208,23 @@ public class BungeeMethods implements MethodInterface {
         }
 
         if (onlineOnThisServer) {
-            return true;
+            callback.accept(true);
         }
 
-        return BungeeMain.getInstance().getJedisPool().getResource().exists("advancedban:onlineplayer:" + name);
+        //Check if the player is on the network
+        String id = UUID.randomUUID().toString().replace("-", "");
+
+        PubSubMessageListener.getFindFoundMap().put(id, callback);
+
+        try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
+            jedis.publish("advancedban:findplayer:v1", String.format("find %s %s", name, id));
+        }
+
+        BungeeMain.getInstance().getProxy().getScheduler().schedule(BungeeMain.getInstance(), () -> {
+            if (!PubSubMessageListener.getFindFoundMap().containsKey(id)) return;
+            PubSubMessageListener.getFindFoundMap().remove(id);
+            callback.accept(false);
+        }, 500, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -220,8 +240,11 @@ public class BungeeMethods implements MethodInterface {
             return;
         }
         if (Universal.isRedis()) {
-            Universal.get().getMethods().runAsync(
-                    () -> BungeeMain.getInstance().getJedisPool().getResource().publish("advancedban:main:v1", "kick " + player + " " + reason));
+            Universal.get().getMethods().runAsync(() -> {
+                try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
+                    jedis.publish("advancedban:main:v1", "kick " + player + " " + reason);
+                }
+            });
             return;
         }
         getPlayer(player).disconnect(TextComponent.fromLegacyText(reason));
@@ -415,8 +438,11 @@ public class BungeeMethods implements MethodInterface {
         if (Universal.isRedis()) {
             notification
                     .forEach((str) -> Universal.get().getMethods()
-                            .runAsync(() -> BungeeMain.getInstance().getJedisPool().getResource()
-                                    .publish("advancedban:main:v1", "notification " + perm + " " + str)));
+                            .runAsync(() -> {
+                                try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
+                                    jedis.publish("advancedban:main:v1", "notification " + perm + " " + str);
+                                }
+                            }));
         } else {
             ProxyServer.getInstance().getPlayers()
                     .stream()

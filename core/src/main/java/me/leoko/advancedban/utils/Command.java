@@ -383,7 +383,7 @@ public enum Command {
                     return;
 
                 String ip = Universal.get().getIps().getOrDefault(name.toLowerCase(), "none cashed");
-                String loc = Universal.get().getMethods().getFromUrlJson("http://ip-api.com/json/" + ip, "country");
+                String loc = Universal.get().getMethods().getFromUrlJson("https://ip-api.com/json/" + ip, "country");
                 Punishment mute = PunishmentManager.get().getMute(uuid);
                 Punishment ban = PunishmentManager.get().getBan(uuid);
 

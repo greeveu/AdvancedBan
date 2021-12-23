@@ -27,9 +27,8 @@
 
     <distributionManagement>
         <repository>
-            <id>github</id>
-            <name>GitHub OWNER Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/DevLeoko/AdvancedBan</url>
+            <id>greev-repo</id>
+            <url>https://maven.greev.eu</url>
         </repository>
     </distributionManagement>
 

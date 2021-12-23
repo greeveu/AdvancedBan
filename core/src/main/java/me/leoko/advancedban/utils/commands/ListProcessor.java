@@ -67,10 +67,10 @@ public class ListProcessor implements Consumer<Command.CommandInput> {
         }
 
         String prefix = MessageManager.getMessage("General.Prefix");
-        List<String> header = MessageManager.getLayout(mi.getMessages(), config + ".Header",
+        String header = MessageManager.getLayout(mi.getMessages(), config + ".Header",
                 "PREFIX", prefix, "NAME", name);
 
-        header.forEach(line -> mi.sendMessage(input.getSender(), line));
+        mi.sendMessage(input.getSender(), header);
 
 
         SimpleDateFormat format = new SimpleDateFormat(mi.getString(mi.getConfig(),
@@ -78,8 +78,8 @@ public class ListProcessor implements Consumer<Command.CommandInput> {
 
         for (int i = (page - 1) * 5; i < page * 5 && punishments.size() > i; i++) {
             Punishment punishment = punishments.get(i);
-            String nameOrIp = punishment.getType().isIpOrientated() ? punishment.getName() + " / " +punishment.getUuid() : punishment.getName();
-            List<String> entryLayout = MessageManager.getLayout(mi.getMessages(), config + ".Entry",
+            String nameOrIp = punishment.getType().isIpOrientated() ? punishment.getName() + " / " + punishment.getUuid() : punishment.getName();
+            String entryLayout = MessageManager.getLayout(mi.getMessages(), config + ".Entry",
                     "PREFIX", prefix,
                     "NAME", nameOrIp,
                     "DURATION", punishment.getDuration(history),
@@ -89,17 +89,15 @@ public class ListProcessor implements Consumer<Command.CommandInput> {
                     "ID", punishment.getId() + "",
                     "DATE", format.format(new Date(punishment.getStart())));
 
-            for (String line : entryLayout)
-                mi.sendMessage(input.getSender(), line);
-        }
+            mi.sendMessage(input.getSender(), entryLayout);
 
-        MessageManager.sendMessage(input.getSender(), config + ".Footer", false,
-                "CURRENT_PAGE", page + "",
-                "TOTAL_PAGES", (punishments.size() / 5 + (punishments.size() % 5 != 0 ? 1 : 0)) + "",
-                "COUNT", punishments.size() + "");
-        if (punishments.size() / 5.0 + 1 > page + 1) {
-            MessageManager.sendMessage(input.getSender(), config + ".PageFooter", false,
-                    "NEXT_PAGE", (page + 1) + "", "NAME", name);
+            MessageManager.sendMessage(input.getSender(), config + ".Footer", false,
+                    "CURRENT_PAGE", page + "",
+                    "TOTAL_PAGES", (punishments.size() / 5 + (punishments.size() % 5 != 0 ? 1 : 0)) + "",
+                    "COUNT", punishments.size() + "");
+            if (punishments.size() / 5.0 + 1 > page + 1) {
+                MessageManager.sendMessage(input.getSender(), config + ".PageFooter", false,
+                        "NEXT_PAGE", (page + 1) + "", "NAME", name);
+            }
         }
     }
-}

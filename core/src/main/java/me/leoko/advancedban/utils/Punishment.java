@@ -1,9 +1,6 @@
 package me.leoko.advancedban.utils;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import me.leoko.advancedban.MethodInterface;
 import me.leoko.advancedban.Universal;
 import me.leoko.advancedban.manager.DatabaseManager;
@@ -14,9 +11,7 @@ import me.leoko.advancedban.manager.TimeManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by Leoko @ dev.skamps.eu on 30.05.2016.
@@ -116,9 +111,7 @@ public class Punishment {
                     mi.runSync(() -> mi.kickPlayer(getName(), getLayoutBSN()));
                 } else {
                     if (getType().getBasic() != PunishmentType.NOTE) {
-                        for (String str : getLayout()) {
-                            mi.sendMessage(p, str);
-                        }
+                        mi.sendMessage(p, getLayout());
                     }
                     PunishmentManager.get().getLoadedPunishments(false).add(this);
                 }
@@ -157,7 +150,7 @@ public class Punishment {
     }
 
     private void announce(int cWarnings) {
-        List<String> notification = MessageManager.getLayout(mi.getMessages(),
+        String notification = MessageManager.getLayout(mi.getMessages(),
                 getType().getName() + ".Notification",
                 "OPERATOR", getOperator(),
                 "PREFIX", mi.getBoolean(mi.getConfig(), "Disable Prefix", false) ? "" : MessageManager.getMessage("General.Prefix"),
@@ -197,7 +190,7 @@ public class Punishment {
         if (who != null) {
             String message = MessageManager.getMessage("Un" + getType().getBasic().getConfSection("Notification"),
                     true, "OPERATOR", who, "NAME", getName());
-            mi.notify("ab.undoNotify." + getType().getBasic().getName(), Collections.singletonList(message));
+            mi.notify("ab.undoNotify." + getType().getBasic().getName(), message);
 
             Universal.get().debug(who + " is deleting a punishment");
         }
@@ -206,7 +199,7 @@ public class Punishment {
         mi.callRevokePunishmentEvent(this, massClear);
     }
 
-    public List<String> getLayout() {
+    public String getLayout() {
         boolean isLayout = getReason().startsWith("@") || getReason().startsWith("~");
 
         return MessageManager.getLayout(
@@ -260,11 +253,7 @@ public class Punishment {
     }
 
     public String getLayoutBSN() {
-        StringBuilder msg = new StringBuilder();
-        for (String str : getLayout()) {
-            msg.append("\n").append(str);
-        }
-        return msg.substring(1);
+        return getLayout();
     }
 
     public boolean isExpired() {

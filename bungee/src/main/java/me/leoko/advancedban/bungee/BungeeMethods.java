@@ -322,9 +322,7 @@ public class BungeeMethods implements MethodInterface {
     public boolean callChat(Object player) {
         Punishment pnt = PunishmentManager.get().getMute(UUIDManager.get().getUUID(getName(player)));
         if (pnt != null) {
-            for (String str : pnt.getLayout()) {
-                sendMessage(player, str);
-            }
+            sendMessage(player, pnt.getLayout());
             return true;
         }
         return false;
@@ -335,9 +333,7 @@ public class BungeeMethods implements MethodInterface {
         Punishment pnt;
         if (Universal.get().isMuteCommand(cmd.substring(1))
                 && (pnt = PunishmentManager.get().getMute(UUIDManager.get().getUUID(getName(player)))) != null) {
-            for (String str : pnt.getLayout()) {
-                sendMessage(player, str);
-            }
+            sendMessage(player, pnt.getLayout());
             return true;
         }
         return false;
@@ -439,20 +435,19 @@ public class BungeeMethods implements MethodInterface {
     }
 
     @Override
-    public void notify(String perm, List<String> notification) {
+    public void notify(String perm, String notification) {
         if (Universal.isRedis()) {
-            notification
-                    .forEach((str) -> Universal.get().getMethods()
-                            .runAsync(() -> {
-                                try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
-                                    jedis.publish("advancedban:main:v1", "notification " + perm + " " + str);
-                                }
-                            }));
+            Universal.get().getMethods()
+                    .runAsync(() -> {
+                        try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
+                            jedis.publish("advancedban:main:v1", "notification " + perm + " " + notification);
+                        }
+                    });
         } else {
             ProxyServer.getInstance().getPlayers()
                     .stream()
                     .filter((pp) -> (Universal.get().hasPerms(pp, perm)))
-                    .forEachOrdered((pp) -> notification.forEach((str) -> sendMessage(pp, str)));
+                    .forEachOrdered((pp) -> sendMessage(pp, notification));
         }
     }
 

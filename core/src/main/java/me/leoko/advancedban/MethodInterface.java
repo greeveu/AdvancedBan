@@ -7,7 +7,6 @@ import me.leoko.advancedban.utils.tabcompletion.TabCompleter;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 /**
@@ -399,11 +398,10 @@ public interface MethodInterface {
 
     /**
      * Broadcast a message to every user with the given permission.
-     *
-     * @param perm         the perm
+     *  @param perm         the perm
      * @param notification the notification
      */
-    void notify(String perm, List<String> notification);
+    void notify(String perm, String notification);
 
     /**
      * Log a message.

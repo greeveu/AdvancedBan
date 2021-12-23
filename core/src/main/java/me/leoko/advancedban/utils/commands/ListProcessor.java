@@ -101,3 +101,4 @@ public class ListProcessor implements Consumer<Command.CommandInput> {
             }
         }
     }
+}

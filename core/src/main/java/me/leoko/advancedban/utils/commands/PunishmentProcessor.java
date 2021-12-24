@@ -53,7 +53,6 @@ public class PunishmentProcessor implements Consumer<Command.CommandInput> {
                     timeTemplate = calculation.template;
             }
 
-
             // build reason
             String reason = processReason(input);
             if (reason == null)

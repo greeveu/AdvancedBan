@@ -214,6 +214,7 @@ public class BungeeMethods implements MethodInterface {
 
         if (onlineOnThisServer) {
             callback.accept(true);
+            return;
         }
 
         //Check if the player is on the network

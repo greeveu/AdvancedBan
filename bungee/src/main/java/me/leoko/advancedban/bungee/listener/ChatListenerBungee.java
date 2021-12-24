@@ -18,28 +18,34 @@ public class ChatListenerBungee implements Listener {
         if (!(event.getSender() instanceof ProxiedPlayer)) {
             return;
         }
-        if (!event.isCommand()) {
-            if (Universal.get().getMethods().callChat(event.getSender())) {
-                event.setCancelled(true);
-            }
-        } else {
+
+        if (event.isCommand()) {
             if (Universal.get().getMethods().callCMD(event.getSender(), event.getMessage())) {
                 event.setCancelled(true);
             }
+        } else if (Universal.get().getMethods().callChat(event.getSender())) {
+            event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onTabComplete(TabCompleteEvent event) {
         final String commandName = event.getCursor().split(" ")[0];
-        if (commandName.length() > 1 && event.getCursor().length() > commandName.length()) {
-            final Command command = Command.getByName(commandName.substring(1));
-            if (command != null && event.getSender() instanceof ProxiedPlayer) {
-                if (command.getPermission() == null || Universal.get().getMethods().hasPerms(event.getSender(), command.getPermission())) {
-                    final String[] args = event.getCursor().substring(commandName.length() + 1).split(" ", -1);
-                    event.getSuggestions().addAll(command.getTabCompleter().onTabComplete(event.getSender(), args));
-                }
-            }
+        if (commandName.length() <= 1 || event.getCursor().length() <= commandName.length()) {
+            return;
         }
+
+        final Command command = Command.getByName(commandName.substring(1));
+
+        if (command == null || !(event.getSender() instanceof ProxiedPlayer)) {
+            return;
+        }
+
+        if (command.getPermission() != null && !Universal.get().getMethods().hasPerms(event.getSender(), command.getPermission())) {
+            return;
+        }
+
+        final String[] args = event.getCursor().substring(commandName.length() + 1).split(" ", -1);
+        event.getSuggestions().addAll(command.getTabCompleter().onTabComplete(event.getSender(), args));
     }
 }

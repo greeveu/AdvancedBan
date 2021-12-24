@@ -3,10 +3,6 @@ package me.leoko.advancedban.manager;
 import me.leoko.advancedban.MethodInterface;
 import me.leoko.advancedban.Universal;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 /**
  * The Message Manager is used for a convenient way to retrieve messages from configuration files.<br>
  * The manager is designed for (but not limited to) messages from the <code>message.yml</code> file.
@@ -70,14 +66,14 @@ public class MessageManager {
      * @param parameters the parameters
      * @return the layout
      */
-    public static List<String> getLayout(Object file, String path, String... parameters) {
+    public static String getLayout(Object file, String path, String... parameters) {
     	MethodInterface mi = mi();
+        StringBuilder stringBuilder = new StringBuilder();
         if (mi.contains(file, path)) {
-            List<String> list = new ArrayList<>();
             for (String str : mi.getStringList(file, path)) {
-                list.add(replace(str, parameters).replace('&', '§'));
+                stringBuilder.append(replace(str, parameters).replace('&', '§')).append("\n");
             }
-            return list;
+            return stringBuilder.toString();
         }
         String fileName = mi.getFileName(file);
 		System.out.println("!! Message-Error in " + fileName + "!\n"
@@ -85,7 +81,7 @@ public class MessageManager {
 		        + "\n  - Check the " + fileName + "-File for any missing or double \" or '"
 		        + "\n  - Visit yamllint.com to  validate your " + fileName
 		        + "\n  - Delete the message file and restart the server");
-		return Collections.singletonList("Failed! See console for details!");
+		return "Failed! See console for details!";
     }
 
     /**

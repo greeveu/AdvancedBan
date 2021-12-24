@@ -1,5 +1,6 @@
-# AdvancedBan
+# Greev.eu AdvancedBan Fork
 
+Yes this is supposed to be open source, feel free to add pull request and/or use it yourself if you find it useful.
 
 Bukkit- & BungeeCord-Plugin at once <br>
 Check out our [Spigot-Page](https://www.spigotmc.org/resources/advancedban.8695/) for more  information!

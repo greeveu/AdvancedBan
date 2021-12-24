@@ -4,12 +4,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.imaginarycode.minecraft.redisbungee.RedisBungee;
 import me.leoko.advancedban.MethodInterface;
 import me.leoko.advancedban.Universal;
+import me.leoko.advancedban.bungee.event.NotificationEvent;
 import me.leoko.advancedban.bungee.event.PunishmentEvent;
 import me.leoko.advancedban.bungee.event.RevokePunishmentEvent;
 import me.leoko.advancedban.bungee.listener.CommandReceiverBungee;
+import me.leoko.advancedban.bungee.listener.PubSubMessageListener;
 import me.leoko.advancedban.bungee.utils.LuckPermsOfflineUser;
 import me.leoko.advancedban.manager.DatabaseManager;
 import me.leoko.advancedban.manager.PunishmentManager;
@@ -27,6 +28,7 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import org.bstats.bungeecord.Metrics;
+import redis.clients.jedis.Jedis;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +39,7 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Created by Leoko @ dev.skamps.eu on 23.07.2016.
@@ -161,7 +164,7 @@ public class BungeeMethods implements MethodInterface {
 
     @Override
     public Plugin getPlugin() {
-        return BungeeMain.get();
+        return BungeeMain.getInstance();
     }
 
     @Override
@@ -177,6 +180,14 @@ public class BungeeMethods implements MethodInterface {
     @SuppressWarnings("deprecation")
     @Override
     public void sendMessage(Object player, String msg) {
+
+        if (player instanceof ProxiedPlayer) {
+            NotificationEvent notificationEvent = new NotificationEvent((ProxiedPlayer) player, msg);
+            getPlugin().getProxy().getPluginManager().callEvent(notificationEvent);
+
+            if (notificationEvent.isCancelled()) return;
+        }
+
         ((CommandSender) player).sendMessage(msg);
     }
 
@@ -187,25 +198,39 @@ public class BungeeMethods implements MethodInterface {
 
     @Override
     public Permissionable getOfflinePermissionPlayer(String name) {
-        if(luckPermsSupport) return new LuckPermsOfflineUser(name);
+        if (luckPermsSupport) return new LuckPermsOfflineUser(name);
 
         return permission -> false;
     }
 
     @Override
-    public boolean isOnline(String name) {
+    public void isOnline(String name, Consumer<Boolean> callback) {
+        //Check if the player is on the local server
+        boolean onlineOnThisServer = false;
         try {
-            if (Universal.isRedis()) {
-                for (String str : RedisBungee.getApi().getHumanPlayersOnline()) {
-                    if (str.equalsIgnoreCase(name)) {
-                        return RedisBungee.getApi().getPlayerIp(RedisBungee.getApi().getUuidFromName(str)) != null;
-                    }
-                }
-            }
-            return getPlayer(name).getAddress() != null;
-        } catch (NullPointerException exc) {
-            return false;
+            onlineOnThisServer = getPlayer(name).getAddress() != null;
+        } catch (NullPointerException ignored) {
         }
+
+        if (onlineOnThisServer) {
+            callback.accept(true);
+            return;
+        }
+
+        //Check if the player is on the network
+        String id = UUID.randomUUID().toString().replace("-", "");
+
+        PubSubMessageListener.getFindFoundMap().put(id, callback);
+
+        try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
+            jedis.publish("advancedban:findplayer:v1", String.format("find %s %s", name, id));
+        }
+
+        BungeeMain.getInstance().getProxy().getScheduler().schedule(BungeeMain.getInstance(), () -> {
+            if (!PubSubMessageListener.getFindFoundMap().containsKey(id)) return;
+            PubSubMessageListener.getFindFoundMap().remove(id);
+            callback.accept(false);
+        }, 500, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -216,13 +241,19 @@ public class BungeeMethods implements MethodInterface {
 
     @Override
     public void kickPlayer(String player, String reason) {
-        if(BungeeMain.getCloudSupport() != null){
+        if (BungeeMain.getCloudSupport() != null) {
             BungeeMain.getCloudSupport().kick(getPlayer(player).getUniqueId(), reason);
-        }else if (Universal.isRedis()) {
-            RedisBungee.getApi().sendChannelMessage("advancedban:main", "kick " + player + " " + reason);
-        } else {
-            getPlayer(player).disconnect(TextComponent.fromLegacyText(reason));
+            return;
         }
+        if (Universal.isRedis()) {
+            Universal.get().getMethods().runAsync(() -> {
+                try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
+                    jedis.publish("advancedban:main:v1", "kick " + player + " " + reason);
+                }
+            });
+            return;
+        }
+        getPlayer(player).disconnect(TextComponent.fromLegacyText(reason));
     }
 
     @Override
@@ -246,6 +277,9 @@ public class BungeeMethods implements MethodInterface {
     }
 
     @Override
+    /**
+     * WARNING not Sync to Main-Thread
+     */
     public void runSync(Runnable rn) {
         rn.run(); //TODO WARNING not Sync to Main-Thread
     }
@@ -289,9 +323,7 @@ public class BungeeMethods implements MethodInterface {
     public boolean callChat(Object player) {
         Punishment pnt = PunishmentManager.get().getMute(UUIDManager.get().getUUID(getName(player)));
         if (pnt != null) {
-            for (String str : pnt.getLayout()) {
-                sendMessage(player, str);
-            }
+            sendMessage(player, pnt.getLayout());
             return true;
         }
         return false;
@@ -302,9 +334,7 @@ public class BungeeMethods implements MethodInterface {
         Punishment pnt;
         if (Universal.get().isMuteCommand(cmd.substring(1))
                 && (pnt = PunishmentManager.get().getMute(UUIDManager.get().getUUID(getName(player)))) != null) {
-            for (String str : pnt.getLayout()) {
-                sendMessage(player, str);
-            }
+            sendMessage(player, pnt.getLayout());
             return true;
         }
         return false;
@@ -406,14 +436,19 @@ public class BungeeMethods implements MethodInterface {
     }
 
     @Override
-    public void notify(String perm, List<String> notification) {
+    public void notify(String perm, String notification) {
         if (Universal.isRedis()) {
-            notification.forEach((str) -> RedisBungee.getApi().sendChannelMessage("advancedban:main", "notification " + perm + " " + str));
+            Universal.get().getMethods()
+                    .runAsync(() -> {
+                        try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
+                            jedis.publish("advancedban:main:v1", "notification " + perm + " " + notification);
+                        }
+                    });
         } else {
             ProxyServer.getInstance().getPlayers()
                     .stream()
                     .filter((pp) -> (Universal.get().hasPerms(pp, perm)))
-                    .forEachOrdered((pp) -> notification.forEach((str) -> sendMessage(pp, str)));
+                    .forEachOrdered((pp) -> sendMessage(pp, notification));
         }
     }
 

@@ -438,12 +438,11 @@ public class BungeeMethods implements MethodInterface {
     @Override
     public void notify(String perm, String notification) {
         if (Universal.isRedis()) {
-            Universal.get().getMethods()
-                    .runAsync(() -> {
-                        try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
-                            jedis.publish("advancedban:main:v1", "notification " + perm + " " + notification);
-                        }
-                    });
+            Universal.get().getMethods().runAsync(() -> {
+                try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
+                    jedis.publish("advancedban:main:v1", "notification " + perm + " " + notification);
+                }
+            });
         } else {
             ProxyServer.getInstance().getPlayers()
                     .stream()

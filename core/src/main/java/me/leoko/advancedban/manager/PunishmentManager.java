@@ -20,7 +20,7 @@ public class PunishmentManager {
     private final Set<Punishment> punishments = Collections.synchronizedSet(new HashSet<>());
     private final Set<Punishment> history = Collections.synchronizedSet(new HashSet<>());
     private final Set<String> cached = Collections.synchronizedSet(new HashSet<>());
-    
+
     private Universal universal() {
     	return Universal.get();
     }
@@ -60,7 +60,8 @@ public class PunishmentManager {
     public InterimData load(String name, String uuid, String ip) {
         Set<Punishment> punishments = new HashSet<>();
         Set<Punishment> history = new HashSet<>();
-        try (ResultSet resultsPunishments = DatabaseManager.get().executeResultStatement(SQLQuery.SELECT_USER_PUNISHMENTS_WITH_IP, uuid, ip); ResultSet resultsHistory = DatabaseManager.get().executeResultStatement(SQLQuery.SELECT_USER_PUNISHMENTS_HISTORY_WITH_IP, uuid, ip)) {
+        try (ResultSet resultsPunishments = DatabaseManager.get().executeResultStatement(SQLQuery.SELECT_USER_PUNISHMENTS_WITH_IP, uuid, ip);
+             ResultSet resultsHistory = DatabaseManager.get().executeResultStatement(SQLQuery.SELECT_USER_PUNISHMENTS_HISTORY_WITH_IP, uuid, ip)) {
             if (resultsHistory == null || resultsPunishments == null)
                 return null;
 

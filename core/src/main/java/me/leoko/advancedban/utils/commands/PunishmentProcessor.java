@@ -118,7 +118,6 @@ public class PunishmentProcessor implements Consumer<Command.CommandInput> {
         MethodInterface mi = Universal.get().getMethods();
         String dataName = name.toLowerCase();
 
-
         mi.isOnline(dataName, isPlayerOnline -> {
             boolean exempt;
             if (isPlayerOnline) {

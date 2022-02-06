@@ -2,6 +2,7 @@ package me.leoko.advancedban.utils;
 
 import me.leoko.advancedban.manager.PunishmentManager;
 
+import java.util.Comparator;
 import java.util.Set;
 
 /**
@@ -41,12 +42,10 @@ public class InterimData {
     }
 
     public Punishment getBan() {
-        for (Punishment pt : punishments) {
-            if (pt.getType().getBasic() == PunishmentType.BAN && !pt.isExpired()) {
-                return pt;
-            }
-        }
-        return null;
+        return punishments.stream()
+                .filter(pt -> pt.getType().getBasic() == PunishmentType.BAN && !pt.isExpired())
+                .max(Comparator.comparing(Punishment::getEnd))
+                .orElse(null);
     }
 
     public void accept() {

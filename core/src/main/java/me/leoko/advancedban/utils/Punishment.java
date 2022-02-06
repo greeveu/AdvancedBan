@@ -1,5 +1,6 @@
 package me.leoko.advancedban.utils;
 
+import lombok.Getter;
 import me.leoko.advancedban.MethodInterface;
 import me.leoko.advancedban.Universal;
 import me.leoko.advancedban.manager.DatabaseManager;
@@ -10,20 +11,22 @@ import me.leoko.advancedban.manager.TimeManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by Leoko @ dev.skamps.eu on 30.05.2016.
  */
+@Getter
 public class Punishment {
 
     private static final MethodInterface mi = Universal.get().getMethods();
-    private final String name, uuid, operator, calculation;
-    private final long start, end;
+    private final String uuid;
+    private final String name;
+    private final String operator;
+    private final String calculation;
+    private final long start;
+    private final long end;
     private final PunishmentType type;
-
     private String reason;
     private int id;
 
@@ -66,13 +69,13 @@ public class Punishment {
     public void create(boolean silent) {
         if (id != -1) {
             Universal.get().log("!! Failed! AB tried to overwrite the punishment:");
-            Universal.get().log("!! Failed at: " + toString());
+            Universal.get().log("!! Failed at: " + this);
             return;
         }
 
         if (uuid == null) {
             Universal.get().log("!! Failed! AB has not saved the " + getType().getName() + " because there is no fetched UUID");
-            Universal.get().log("!! Failed at: " + toString());
+            Universal.get().log("!! Failed at: " + this);
             return;
         }
 
@@ -88,7 +91,7 @@ public class Punishment {
                         id = rs.getInt("id");
                     } else {
                         Universal.get().log("!! Not able to update ID of punishment! Please restart the server to resolve this issue!");
-                        Universal.get().log("!! Failed at: " + toString());
+                        Universal.get().log("!! Failed at: " + this);
                     }
                 }
             } catch (SQLException ex) {
@@ -100,39 +103,42 @@ public class Punishment {
             announce(cWarnings);
         }
 
-        if (mi.isOnline(getName())) {
-            final Object p = mi.getPlayer(getName());
+        mi.isOnline(getName(), isPlayerOnline -> {
+            if (isPlayerOnline) {
+                final Object p = mi.getPlayer(getName());
 
-            if (getType().getBasic() == PunishmentType.BAN || getType() == PunishmentType.KICK) {
-                mi.runSync(() -> mi.kickPlayer(getName(), getLayoutBSN()));
-            } else {
-                if (getType().getBasic() != PunishmentType.NOTE)
-                    for (String str : getLayout()) {
-                        mi.sendMessage(p, str);
+                if (getType().getBasic() == PunishmentType.BAN || getType() == PunishmentType.KICK) {
+                    mi.runSync(() -> mi.kickPlayer(getName(), getLayoutBSN()));
+                } else {
+                    if (getType().getBasic() != PunishmentType.NOTE) {
+                        mi.sendMessage(p, getLayout());
                     }
-                PunishmentManager.get().getLoadedPunishments(false).add(this);
-            }
-        }
-
-        PunishmentManager.get().getLoadedHistory().add(this);
-
-        mi.callPunishmentEvent(this);
-
-        if (getType().getBasic() == PunishmentType.WARNING) {
-            String cmd = null;
-            for (int i = 1; i <= cWarnings; i++) {
-                if (mi.contains(mi.getConfig(), "WarnActions." + i)) {
-                    cmd = mi.getString(mi.getConfig(), "WarnActions." + i);
+                    PunishmentManager.get().getLoadedPunishments(false).add(this);
                 }
             }
-            if (cmd != null) {
-                final String finalCmd = cmd.replaceAll("%PLAYER%", getName()).replaceAll("%COUNT%", cWarnings + "").replaceAll("%REASON%", getReason());
-                mi.runSync(() -> {
-                    mi.executeCommand(finalCmd);
-                    Universal.get().log("Executing command: " + finalCmd);
-                });
+
+            PunishmentManager.get().getLoadedHistory().add(this);
+
+            mi.callPunishmentEvent(this);
+
+            if (getType().getBasic() == PunishmentType.WARNING) {
+                String cmd = null;
+                for (int i = 1; i <= cWarnings; i++) {
+                    if (mi.contains(mi.getConfig(), "WarnActions." + i)) {
+                        cmd = mi.getString(mi.getConfig(), "WarnActions." + i);
+                    }
+                }
+                if (cmd != null) {
+                    final String finalCmd = cmd.replaceAll("%PLAYER%", getName())
+                            .replaceAll("%COUNT%", cWarnings + "")
+                            .replaceAll("%REASON%", getReason());
+                    mi.runSync(() -> {
+                        mi.executeCommand(finalCmd);
+                        Universal.get().log("Executing command: " + finalCmd);
+                    });
+                }
             }
-        }
+        });
     }
 
     public void updateReason(String reason) {
@@ -144,7 +150,7 @@ public class Punishment {
     }
 
     private void announce(int cWarnings) {
-        List<String> notification = MessageManager.getLayout(mi.getMessages(),
+        String notification = MessageManager.getLayout(mi.getMessages(),
                 getType().getName() + ".Notification",
                 "OPERATOR", getOperator(),
                 "PREFIX", mi.getBoolean(mi.getConfig(), "Disable Prefix", false) ? "" : MessageManager.getMessage("General.Prefix"),
@@ -171,7 +177,7 @@ public class Punishment {
 
         if (id == -1) {
             Universal.get().log("!! Failed deleting! The Punishment is not created yet!");
-            Universal.get().log("!! Failed at: " + toString());
+            Universal.get().log("!! Failed at: " + this);
             return;
         }
 
@@ -184,7 +190,7 @@ public class Punishment {
         if (who != null) {
             String message = MessageManager.getMessage("Un" + getType().getBasic().getConfSection("Notification"),
                     true, "OPERATOR", who, "NAME", getName());
-            mi.notify("ab.undoNotify." + getType().getBasic().getName(), Collections.singletonList(message));
+            mi.notify("ab.undoNotify." + getType().getBasic().getName(), message);
 
             Universal.get().debug(who + " is deleting a punishment");
         }
@@ -193,7 +199,7 @@ public class Punishment {
         mi.callRevokePunishmentEvent(this, massClear);
     }
 
-    public List<String> getLayout() {
+    public String getLayout() {
         boolean isLayout = getReason().startsWith("@") || getReason().startsWith("~");
 
         return MessageManager.getLayout(
@@ -247,47 +253,11 @@ public class Punishment {
     }
 
     public String getLayoutBSN() {
-        StringBuilder msg = new StringBuilder();
-        for (String str : getLayout()) {
-            msg.append("\n").append(str);
-        }
-        return msg.substring(1);
+        return getLayout();
     }
 
     public boolean isExpired() {
         return getType().isTemp() && getEnd() <= TimeManager.getTime();
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public String getUuid() {
-        return this.uuid;
-    }
-
-    public String getOperator() {
-        return this.operator;
-    }
-
-    public String getCalculation() {
-        return this.calculation;
-    }
-
-    public long getStart() {
-        return this.start;
-    }
-
-    public long getEnd() {
-        return this.end;
-    }
-
-    public PunishmentType getType() {
-        return this.type;
-    }
-
-    public int getId() {
-        return this.id;
     }
 
     public String toString() {

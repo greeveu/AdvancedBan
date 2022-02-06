@@ -14,7 +14,7 @@ public class TimeManager {
      * @return the timestamp
      */
     public static long getTime() {
-        return new Date().getTime() + Universal.get().getMethods().getInteger(Universal.get().getMethods().getConfig(), "TimeDiff", 0) * 60 * 60 * 1000;
+        return new Date().getTime() + (long) Universal.get().getMethods().getInteger(Universal.get().getMethods().getConfig(), "TimeDiff", 0) * 60 * 60 * 1000;
     }
 
     /**

@@ -103,13 +103,14 @@ public enum Command {
             ".+",
             new PunishmentTabCompleter(false),
             input -> {
-                if (!Universal.get().getMethods().isOnline(input.getPrimaryData())) {
-                    MessageManager.sendMessage(input.getSender(), "Kick.NotOnline", true,
-                            "NAME", input.getPrimary());
-                    return;
-                }
+                Universal.get().getMethods().isOnline(input.getPrimaryData(), isOnline -> {
+                    if (!isOnline) {
+                        MessageManager.sendMessage(input.getSender(), "Kick.NotOnline", true, "NAME", input.getPrimary());
+                        return;
+                    }
 
-                new PunishmentProcessor(PunishmentType.KICK).accept(input);
+                    new PunishmentProcessor(PunishmentType.KICK).accept(input);
+                });
             },
             PunishmentType.KICK.getConfSection("Usage"),
             "kick"),
@@ -382,7 +383,7 @@ public enum Command {
                     return;
 
                 String ip = Universal.get().getIps().getOrDefault(name.toLowerCase(), "none cashed");
-                String loc = Universal.get().getMethods().getFromUrlJson("http://ip-api.com/json/" + ip, "country");
+                String loc = Universal.get().getMethods().getFromUrlJson("https://ip-api.com/json/" + ip, "country");
                 Punishment mute = PunishmentManager.get().getMute(uuid);
                 Punishment ban = PunishmentManager.get().getBan(uuid);
 
@@ -513,7 +514,7 @@ public enum Command {
                 mi.sendMessage(sender, "  §cStorage §8• §7" + (DatabaseManager.get().isUseMySQL() ? "MySQL (external)" : "HSQLDB (local)"));
                 mi.sendMessage(sender, "  §cServer §8• §7" + (Universal.get().isBungee() ? "Bungeecord" : "Spigot/Bukkit"));
                 if (Universal.get().isBungee()) {
-                    mi.sendMessage(sender, "  §cRedisBungee §8• §7" + (Universal.isRedis() ? "true" : "false"));
+                    mi.sendMessage(sender, "  §cRedis §8• §7" + (Universal.isRedis() ? "true" : "false"));
                 }
                 mi.sendMessage(sender, "  §cUUID-Mode §8• §7" + UUIDManager.get().getMode());
                 mi.sendMessage(sender, "  §cPrefix §8• §7" + (mi.getBoolean(mi.getConfig(), "Disable Prefix", false) ? "" : MessageManager.getMessage("General.Prefix")));

@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 /**
  * Created by Leoko @ dev.skamps.eu on 23.07.2016.
@@ -194,8 +195,8 @@ public class BukkitMethods implements MethodInterface {
 
     @SuppressWarnings("deprecation")
     @Override
-    public boolean isOnline(String name) {
-        return Bukkit.getOfflinePlayer(name).isOnline();
+    public void isOnline(String name, Consumer<Boolean> callback) {
+        callback.accept(Bukkit.getOfflinePlayer(name).isOnline());
     }
 
     @Override
@@ -270,7 +271,7 @@ public class BukkitMethods implements MethodInterface {
     public boolean callChat(Object player) {
         Punishment pnt = PunishmentManager.get().getMute(UUIDManager.get().getUUID(getName(player)));
         if (pnt != null) {
-            pnt.getLayout().forEach(str -> sendMessage(player, str));
+            sendMessage(player, pnt.getLayout());
             return true;
         }
         return false;
@@ -280,7 +281,7 @@ public class BukkitMethods implements MethodInterface {
     public boolean callCMD(Object player, String cmd) {
         Punishment pnt;
         if (Universal.get().isMuteCommand(cmd.substring(1)) && (pnt = PunishmentManager.get().getMute(UUIDManager.get().getUUID(getName(player)))) != null) {
-            pnt.getLayout().forEach(str -> sendMessage(player, str));
+            sendMessage(player, pnt.getLayout());
             return true;
         }
         return false;
@@ -381,11 +382,11 @@ public class BukkitMethods implements MethodInterface {
     }
 
     @Override
-    public void notify(String perm, List<String> notification) {
+    public void notify(String perm, String notification) {
         Bukkit.getOnlinePlayers()
                 .stream()
                 .filter(player -> hasPerms(player, perm))
-                .forEach(player -> notification.forEach(str -> sendMessage(player, str)));
+                .forEach(player -> sendMessage(player, notification));
     }
 
     @Override

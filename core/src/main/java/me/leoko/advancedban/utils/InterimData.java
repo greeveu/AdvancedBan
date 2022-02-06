@@ -44,8 +44,13 @@ public class InterimData {
     public Punishment getBan() {
         return punishments.stream()
                 .filter(pt -> pt.getType().getBasic() == PunishmentType.BAN && !pt.isExpired())
-                .max(Comparator.comparing(Punishment::getEnd))
-                .orElse(null);
+                .filter(punishment -> punishment.getEnd() == -1)
+                .min(Comparator.comparing(Punishment::getId))
+                .orElseGet(() -> punishments.stream()
+                        .filter(pt -> pt.getType().getBasic() == PunishmentType.BAN && !pt.isExpired())
+                        .max(Comparator.comparing(Punishment::getEnd))
+                        .orElse(null)
+                );
     }
 
     public void accept() {

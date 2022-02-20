@@ -13,9 +13,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -268,7 +265,7 @@ public class Universal {
     public String callConnection(String name, String ip) {
         name = name.toLowerCase();
         String uuid = UUIDManager.get().getUUID(name);
-        if (uuid == null) return "[AdvancedBan] Failed to fetch your UUID";
+        if (uuid == null) return "§cFailed to fetch your UUID\nPlease try again.";
 
         if (ip != null) {
             getIps().remove(name);
@@ -279,7 +276,7 @@ public class Universal {
 
         if (interimData == null) {
             if (getMethods().getBoolean(mi.getConfig(), "LockdownOnError", true)) {
-                return "[AdvancedBan] Failed to load player data!";
+                return "§cFailed to load player data!\nPlease try again.";
             } else {
                 return null;
             }

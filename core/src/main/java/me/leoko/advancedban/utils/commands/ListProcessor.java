@@ -90,15 +90,16 @@ public class ListProcessor implements Consumer<Command.CommandInput> {
                     "DATE", format.format(new Date(punishment.getStart())));
 
             mi.sendMessage(input.getSender(), entryLayout);
+        }
 
-            MessageManager.sendMessage(input.getSender(), config + ".Footer", false,
-                    "CURRENT_PAGE", page + "",
-                    "TOTAL_PAGES", (punishments.size() / 5 + (punishments.size() % 5 != 0 ? 1 : 0)) + "",
-                    "COUNT", punishments.size() + "");
-            if (punishments.size() / 5.0 + 1 > page + 1) {
-                MessageManager.sendMessage(input.getSender(), config + ".PageFooter", false,
-                        "NEXT_PAGE", (page + 1) + "", "NAME", name);
-            }
+        MessageManager.sendMessage(input.getSender(), config + ".Footer", false,
+                "CURRENT_PAGE", page + "",
+                "TOTAL_PAGES", (punishments.size() / 5 + (punishments.size() % 5 != 0 ? 1 : 0)) + "",
+                "COUNT", punishments.size() + "");
+        
+        if (punishments.size() / 5.0 + 1 > page + 1) {
+            MessageManager.sendMessage(input.getSender(), config + ".PageFooter", false,
+                    "NEXT_PAGE", (page + 1) + "", "NAME", name);
         }
     }
 }

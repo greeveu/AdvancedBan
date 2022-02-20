@@ -73,7 +73,7 @@ public class MessageManager {
             for (String str : mi.getStringList(file, path)) {
                 stringBuilder.append(replace(str, parameters).replace('&', '§')).append("\n");
             }
-            return stringBuilder.toString();
+            return stringBuilder.toString().trim();
         }
         String fileName = mi.getFileName(file);
 		System.out.println("!! Message-Error in " + fileName + "!\n"

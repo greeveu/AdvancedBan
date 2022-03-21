@@ -4,14 +4,12 @@ import lombok.Getter;
 import me.leoko.advancedban.MethodInterface;
 import me.leoko.advancedban.Universal;
 import me.leoko.advancedban.bungee.BungeeMain;
-import net.md_5.bungee.api.Callback;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
 import java.util.HashMap;
-import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 /**
@@ -50,9 +48,10 @@ public class PubSubMessageListener extends JedisPubSub {
             Universal.get().getIps().remove(msg[0].toLowerCase());
             Universal.get().getIps().put(msg[0].toLowerCase(), msg[1]);
         } else if (channel.equals("advancedban:findplayer:v1")) {
-            String command = message.split(" ")[0];
-            String username = message.split(" ")[1];
-            String id = message.split(" ")[2];
+            String[] msg = message.split(" ");
+            String command = msg[0];
+            String username = msg[1];
+            String id = msg[2];
             if (command.equals("find") && ProxyServer.getInstance().getPlayer(username) != null) {
                 try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
                     jedis.publish("advancedban:findplayer:v1", String.format("found %s %s", username, id));

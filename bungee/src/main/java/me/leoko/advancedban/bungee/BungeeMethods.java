@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.imaginarycode.minecraft.redisbungee.RedisBungee;
 import me.leoko.advancedban.MethodInterface;
 import me.leoko.advancedban.Universal;
 import me.leoko.advancedban.bungee.event.NotificationEvent;
@@ -28,7 +29,6 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import org.bstats.bungeecord.Metrics;
-import redis.clients.jedis.Jedis;
 
 import java.io.File;
 import java.io.IOException;
@@ -222,9 +222,7 @@ public class BungeeMethods implements MethodInterface {
 
         PubSubMessageListener.getFindFoundMap().put(id, callback);
 
-        try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
-            jedis.publish("advancedban:findplayer:v1", String.format("find %s %s", name, id));
-        }
+        RedisBungee.getApi().sendChannelMessage("advancedban:findplayer:v1", String.format("find %s %s", name, id));
 
         BungeeMain.getInstance().getProxy().getScheduler().schedule(BungeeMain.getInstance(), () -> {
             if (!PubSubMessageListener.getFindFoundMap().containsKey(id)) return;
@@ -247,9 +245,7 @@ public class BungeeMethods implements MethodInterface {
         }
         if (Universal.isRedis()) {
             Universal.get().getMethods().runAsync(() -> {
-                try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
-                    jedis.publish("advancedban:main:v1", "kick " + player + " " + reason);
-                }
+                RedisBungee.getApi().sendChannelMessage("advancedban:main:v1", "kick " + player + " " + reason);
             });
             return;
         }
@@ -439,9 +435,7 @@ public class BungeeMethods implements MethodInterface {
     public void notify(String perm, String notification) {
         if (Universal.isRedis()) {
             Universal.get().getMethods().runAsync(() -> {
-                try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
-                    jedis.publish("advancedban:main:v1", "notification " + perm + " " + notification);
-                }
+                RedisBungee.getApi().sendChannelMessage("advancedban:main:v1", "notification " + perm + " " + notification);
             });
         } else {
             ProxyServer.getInstance().getPlayers()

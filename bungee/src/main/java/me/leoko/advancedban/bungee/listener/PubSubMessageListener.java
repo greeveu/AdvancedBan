@@ -1,13 +1,14 @@
 package me.leoko.advancedban.bungee.listener;
 
+import com.imaginarycode.minecraft.redisbungee.RedisBungee;
+import com.imaginarycode.minecraft.redisbungee.events.PubSubMessageEvent;
 import lombok.Getter;
 import me.leoko.advancedban.MethodInterface;
 import me.leoko.advancedban.Universal;
-import me.leoko.advancedban.bungee.BungeeMain;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPubSub;
+import net.md_5.bungee.api.plugin.Listener;
+import net.md_5.bungee.event.EventHandler;
 
 import java.util.HashMap;
 import java.util.function.Consumer;
@@ -15,14 +16,16 @@ import java.util.function.Consumer;
 /**
  * @author Beelzebu
  */
-public class PubSubMessageListener extends JedisPubSub {
+public class PubSubMessageListener implements Listener {
 
     private static final MethodInterface mi = Universal.get().getMethods();
     @Getter
     private static final HashMap<String, Consumer<Boolean>> findFoundMap = new HashMap<>();
 
-    @Override
-    public void onMessage(String channel, String message) {
+    @EventHandler
+    public void onMessageReceive(PubSubMessageEvent event) {
+        String channel = event.getChannel();
+        String message = event.getMessage();
         if (channel.equals("advancedban:main:v1")) {
             String[] msg = message.split(" ");
             if (message.startsWith("kick ")) {
@@ -53,9 +56,7 @@ public class PubSubMessageListener extends JedisPubSub {
             String username = msg[1];
             String id = msg[2];
             if (command.equals("find") && ProxyServer.getInstance().getPlayer(username) != null) {
-                try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
-                    jedis.publish("advancedban:findplayer:v1", String.format("found %s %s", username, id));
-                }
+                RedisBungee.getApi().sendChannelMessage("advancedban:findplayer:v1", String.format("found %s %s", username, id));
             } else if (command.equals("found") && findFoundMap.containsKey(id)) {
                 findFoundMap.get(id).accept(true);
                 findFoundMap.remove(id);

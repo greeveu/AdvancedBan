@@ -1,5 +1,6 @@
 package me.leoko.advancedban.bungee.listener;
 
+import com.imaginarycode.minecraft.redisbungee.RedisBungee;
 import me.leoko.advancedban.Universal;
 import me.leoko.advancedban.bungee.BungeeMain;
 import me.leoko.advancedban.manager.PunishmentManager;
@@ -9,7 +10,6 @@ import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
-import redis.clients.jedis.Jedis;
 
 /**
  * Created by Leoko @ dev.skamps.eu on 24.07.2016.
@@ -38,10 +38,7 @@ public class ConnectionListenerBungee implements Listener {
 
             if (Universal.isRedis()) {
                 Universal.get().getMethods().runAsync(() -> {
-                    try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
-                        jedis.publish("advancedban:connection:v1",
-                                event.getConnection().getName() + "," + event.getConnection().getAddress().getAddress().getHostAddress());
-                    }
+                    RedisBungee.getApi().sendChannelMessage("advancedban:connection:v1", event.getConnection().getName() + "," + event.getConnection().getAddress().getAddress().getHostAddress());
                 });
             }
             event.completeIntent((BungeeMain) Universal.get().getMethods().getPlugin());

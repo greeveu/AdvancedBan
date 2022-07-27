@@ -89,20 +89,20 @@ public enum SQLQuery {
             "SELECT * FROM Punishments WHERE uuid = ?"
     ),
     SELECT_USER_PUNISHMENTS_HISTORY(
-            "SELECT * FROM `PunishmentHistory` WHERE `uuid` = ?",
-            "SELECT * FROM PunishmentHistory WHERE uuid = ?"
+            "SELECT * FROM `PunishmentHistory` WHERE `uuid` = ? ORDER BY `start` DESC",
+            "SELECT * FROM PunishmentHistory WHERE uuid = ? ORDER BY start DESC"
     ),
     SELECT_USER_PUNISHMENTS_WITH_IP(
             "SELECT * FROM `Punishments` WHERE `uuid` = ? OR `uuid` = ?",
             "SELECT * FROM Punishments WHERE uuid = ? OR uuid = ?"
     ),
     SELECT_USER_PUNISHMENTS_HISTORY_WITH_IP(
-            "SELECT * FROM `PunishmentHistory` WHERE `uuid` = ? OR `uuid` = ?",
-            "SELECT * FROM PunishmentHistory WHERE uuid = ? OR uuid = ?"
+            "SELECT * FROM `PunishmentHistory` WHERE `uuid` = ? OR `uuid` = ? ORDER BY `start` DESC",
+            "SELECT * FROM PunishmentHistory WHERE uuid = ? OR uuid = ? ORDER BY start DESC"
     ),
     SELECT_USER_PUNISHMENTS_HISTORY_BY_CALCULATION(
-            "SELECT * FROM `PunishmentHistory` WHERE `uuid` = ? AND `calculation` = ?",
-            "SELECT * FROM PunishmentHistory WHERE uuid = ? AND calculation = ?"
+            "SELECT * FROM `PunishmentHistory` WHERE `uuid` = ? AND `calculation` = ? ORDER BY `start` DESC",
+            "SELECT * FROM PunishmentHistory WHERE uuid = ? AND calculation = ? ORDER BY start DESC"
     ),
     UPDATE_PUNISHMENT_REASON(
             "UPDATE `Punishments` SET `reason` = ? WHERE `id` = ?",

@@ -7,6 +7,7 @@ import me.leoko.advancedban.utils.Command;
 import me.leoko.advancedban.utils.Punishment;
 
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
@@ -34,7 +35,7 @@ public class ListProcessor implements Consumer<Command.CommandInput> {
         if (hasTarget) {
             target = input.getPrimary();
             name = target;
-            if (!target.matches("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")) {
+            if (!target.matches("^(?:\\d{1,3}\\.){3}\\d{1,3}$")) {
                 target = processName(input);
                 if (target == null)
                     return;
@@ -45,6 +46,7 @@ public class ListProcessor implements Consumer<Command.CommandInput> {
 
         MethodInterface mi = Universal.get().getMethods();
         final List<Punishment> punishments = listSupplier.apply(target);
+        punishments.sort(Comparator.comparing(Punishment::getStart).reversed());
         if (punishments.isEmpty()) {
             MessageManager.sendMessage(input.getSender(), config + ".NoEntries",
                     true, "NAME", name);

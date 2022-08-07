@@ -21,6 +21,7 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static me.leoko.advancedban.utils.CommandUtils.*;
 import static me.leoko.advancedban.utils.tabcompletion.MutableTabCompleter.list;
@@ -293,7 +294,68 @@ public enum Command {
                     target -> PunishmentManager.get().getPunishments(target, null, false),
                     "History", true, true),
             "History.Usage",
-            "history"),
+            "history", "h"),
+
+    KICKHISTORY("ab.history",
+            "\\S+( [1-9][0-9]*)?",
+            new CleanTabCompleter((user, args) -> {
+                if(args.length == 1)
+                    return list(CleanTabCompleter.PLAYER_PLACEHOLDER, "[Name]");
+                else if(args.length == 2)
+                    return list("<Page>");
+                else
+                    return list();
+            }),
+            new ListProcessor(
+                    target -> PunishmentManager.get().getPunishments(target, null, false).stream().filter(punishment -> punishment.getType().getBasic().equals(PunishmentType.KICK)).collect(Collectors.toList()),
+                    "History", true, true),
+            "History.Usage",
+            "kickhistory"),
+    BANHISTORY("ab.history",
+            "\\S+( [1-9][0-9]*)?",
+            new CleanTabCompleter((user, args) -> {
+                if(args.length == 1)
+                    return list(CleanTabCompleter.PLAYER_PLACEHOLDER, "[Name]");
+                else if(args.length == 2)
+                    return list("<Page>");
+                else
+                    return list();
+            }),
+            new ListProcessor(
+                    target -> PunishmentManager.get().getPunishments(target, null, false).stream().filter(punishment -> punishment.getType().getBasic().equals(PunishmentType.BAN)).collect(Collectors.toList()),
+                    "History", true, true),
+            "History.Usage",
+            "banhistory"),
+    MUTEHISTORY("ab.history",
+            "\\S+( [1-9][0-9]*)?",
+            new CleanTabCompleter((user, args) -> {
+                if(args.length == 1)
+                    return list(CleanTabCompleter.PLAYER_PLACEHOLDER, "[Name]");
+                else if(args.length == 2)
+                    return list("<Page>");
+                else
+                    return list();
+            }),
+            new ListProcessor(
+                    target -> PunishmentManager.get().getPunishments(target, null, false).stream().filter(punishment -> punishment.getType().getBasic().equals(PunishmentType.MUTE)).collect(Collectors.toList()),
+                    "History", true, true),
+            "History.Usage",
+            "mutehistory"),
+    NOTEHISTORY("ab.history",
+            "\\S+( [1-9][0-9]*)?",
+            new CleanTabCompleter((user, args) -> {
+                if(args.length == 1)
+                    return list(CleanTabCompleter.PLAYER_PLACEHOLDER, "[Name]");
+                else if(args.length == 2)
+                    return list("<Page>");
+                else
+                    return list();
+            }),
+            new ListProcessor(
+                    target -> PunishmentManager.get().getPunishments(target, null, false).stream().filter(punishment -> punishment.getType().getBasic().equals(PunishmentType.NOTE)).collect(Collectors.toList()),
+                    "History", true, true),
+            "History.Usage",
+            "notehistory"),
 
     WARNS(null,
             "\\S+( [1-9][0-9]*)?|\\S+|",

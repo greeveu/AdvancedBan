@@ -6,7 +6,12 @@ import me.leoko.advancedban.manager.MessageManager;
 import me.leoko.advancedban.manager.PunishmentManager;
 import me.leoko.advancedban.manager.UUIDManager;
 
+import java.util.regex.Pattern;
+
 public class CommandUtils {
+    private final static Pattern UUID_REGEX_PATTERN =
+            Pattern.compile("^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$");
+
     public static Punishment getPunishment(String target, PunishmentType type) {
         return type == PunishmentType.MUTE
                 ? PunishmentManager.get().getMute(target)
@@ -17,7 +22,17 @@ public class CommandUtils {
     public static String processName(Command.CommandInput input) {
         String name = input.getPrimary();
         input.next();
-        String uuid = UUIDManager.get().getUUID(name.toLowerCase());
+        String uuid;
+
+        if (name == null) {
+            return null;
+        }
+
+        if (isValidUUID(name)) {
+            uuid = name.replace("-", ""); //TODO: Check if this is needed!
+        } else {
+            uuid = UUIDManager.get().getUUID(name.toLowerCase());
+        }
 
         if (uuid == null)
             MessageManager.sendMessage(input.getSender(), "General.FailedFetch",
@@ -54,5 +69,12 @@ public class CommandUtils {
         }
 
         return reason;
+    }
+
+    public static boolean isValidUUID(String str) {
+        if (str == null) {
+            return false;
+        }
+        return UUID_REGEX_PATTERN.matcher(str).matches();
     }
 }

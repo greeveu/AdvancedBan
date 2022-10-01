@@ -1,7 +1,10 @@
 package me.leoko.advancedban;
 
 import com.google.gson.Gson;
+import lombok.Getter;
 import lombok.Setter;
+import me.leoko.advancedban.api.UserApi;
+import me.leoko.advancedban.api.impl.UserApiImpl;
 import me.leoko.advancedban.manager.*;
 import me.leoko.advancedban.utils.Command;
 import me.leoko.advancedban.utils.InterimData;
@@ -31,6 +34,9 @@ public class Universal {
     private final Map<String, String> ips = new HashMap<>();
     private MethodInterface mi;
     private LogManager logManager;
+
+    @Getter
+    private final UserApi userApi = new UserApiImpl();
 
     @Setter
     private static boolean redis = false;

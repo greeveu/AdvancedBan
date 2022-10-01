@@ -302,7 +302,11 @@ public class BungeeMethods implements MethodInterface {
 
     @Override
     public String getInternUUID(Object player) {
-        return player instanceof ProxiedPlayer ? ((ProxiedPlayer) player).getUniqueId().toString().replaceAll("-", "") : "none";
+        if (!(player instanceof ProxiedPlayer)) {
+            return "none";
+        }
+
+        return this.getInternUUID(((ProxiedPlayer) player).getUniqueId());
     }
 
     @Override
@@ -311,8 +315,13 @@ public class BungeeMethods implements MethodInterface {
         if (proxiedPlayer == null) {
             return null;
         }
-        UUID uniqueId = proxiedPlayer.getUniqueId();
-        return uniqueId == null ? null : uniqueId.toString().replaceAll("-", "");
+
+        return this.getInternUUID(proxiedPlayer.getUniqueId());
+    }
+
+    @Override
+    public String getInternUUID(UUID uuid) {
+        return uuid == null ? null : uuid.toString().replace("-", "");
     }
 
     @Override

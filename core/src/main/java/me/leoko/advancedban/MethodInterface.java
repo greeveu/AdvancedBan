@@ -7,6 +7,7 @@ import me.leoko.advancedban.utils.tabcompletion.TabCompleter;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
@@ -142,6 +143,14 @@ public interface MethodInterface {
      * @return the intern uuid
      */
     String getInternUUID(String player);
+
+    /**
+     * Convert a player uuid to string based on the intern uuid rules.
+     *
+     * @param uuid the uuid
+     * @return the intern uuid
+     */
+    String getInternUUID(UUID uuid);
 
     /**
      * Check if player has the given permission.

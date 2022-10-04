@@ -258,13 +258,18 @@ public class BukkitMethods implements MethodInterface {
 
     @Override
     public String getInternUUID(Object player) {
-        return player instanceof OfflinePlayer ? ((OfflinePlayer) player).getUniqueId().toString().replaceAll("-", "") : "none";
+        return player instanceof OfflinePlayer ? this.getInternUUID(((OfflinePlayer) player).getUniqueId()) : "none";
     }
 
     @SuppressWarnings("deprecation")
     @Override
     public String getInternUUID(String player) {
-        return Bukkit.getOfflinePlayer(player).getUniqueId().toString().replaceAll("-", "");
+        return this.getInternUUID(Bukkit.getOfflinePlayer(player).getUniqueId());
+    }
+
+    @Override
+    public String getInternUUID(UUID uuid) {
+        return uuid.toString().replace("-", "");
     }
 
     @Override

@@ -122,16 +122,25 @@ public class PunishmentProcessor implements Consumer<Command.CommandInput> {
             boolean exempt;
             if (isPlayerOnline) {
                 Object onlineTarget = mi.getPlayer(dataName);
-                exempt = canNotPunish((perms) -> mi.hasPerms(sender, perms), (perms) -> mi.hasPerms(onlineTarget, perms), type.getName());
+                exempt = canNotPunish(
+                    (perms) -> mi.hasPerms(sender, perms),
+                    (perms) -> mi.hasPerms(onlineTarget, perms),
+                    type.getName()
+                );
             } else {
                 final Permissionable offlinePermissionPlayer = mi.getOfflinePermissionPlayer(name);
-                exempt = Universal.get().isExemptPlayer(dataName) ||
-                        canNotPunish((perms) -> mi.hasPerms(sender, perms), offlinePermissionPlayer::hasPermission, type.getName());
+                exempt = Universal.get().isExemptPlayer(dataName)
+                    || canNotPunish(
+                        (perms) -> mi.hasPerms(sender, perms),
+                        offlinePermissionPlayer::hasPermission,
+                        type.getName()
+                    );
             }
 
             if (exempt) {
                 MessageManager.sendMessage(sender, type.getBasic().getName() + ".Exempt", true, "NAME", name);
                 callback.accept(true);
+                return;
             }
             callback.accept(false);
         });
@@ -144,8 +153,9 @@ public class PunishmentProcessor implements Consumer<Command.CommandInput> {
             return true;
 
         int targetLevel = permissionLevel(targetHasPerms, perms);
+        int operatorLevel = permissionLevel(operatorHasPerms, perms);
 
-        return targetLevel != 0 && permissionLevel(operatorHasPerms, perms) <= targetLevel;
+        return targetLevel != 0 && operatorLevel <= targetLevel;
     }
 
     private static int permissionLevel(Function<String, Boolean> hasPerms, String permission) {

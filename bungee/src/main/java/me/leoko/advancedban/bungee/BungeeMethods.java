@@ -239,14 +239,8 @@ public class BungeeMethods implements MethodInterface {
 
     @Override
     public void kickPlayer(String player, String reason) {
-        if (BungeeMain.getCloudSupport() != null) {
-            BungeeMain.getCloudSupport().kick(getPlayer(player).getUniqueId(), reason);
-            return;
-        }
         if (Universal.isRedis()) {
-            Universal.get().getMethods().runAsync(() -> {
-                RedisBungee.getApi().sendChannelMessage("advancedban:main:v1", "kick " + player + " " + reason);
-            });
+            Universal.get().getMethods().runAsync(() -> RedisBungee.getApi().sendChannelMessage("advancedban:main:v1", "kick " + player + " " + reason));
             return;
         }
         getPlayer(player).disconnect(TextComponent.fromLegacyText(reason));

@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -120,6 +121,12 @@ public class TestMethods implements MethodInterface {
 
     @Override
     public String getInternUUID(String player) {
+        return null;
+    }
+
+    @Override
+    public String getInternUUID(UUID uuid) {
+        fail("This method has not been setup for tests yet. Edit the me.leoko.advancedban.TestMethods Class! #36");
         return null;
     }
 

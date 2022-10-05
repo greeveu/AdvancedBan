@@ -28,12 +28,8 @@ public class ConnectionListenerBungee implements Listener {
             String result = Universal.get().callConnection(event.getConnection().getName(), event.getConnection().getAddress().getAddress().getHostAddress());
 
             if (result != null) {
-                if (BungeeMain.getCloudSupport() == null) {
-                    event.setCancelled(true);
-                    event.setCancelReason(result);
-                } else {
-                    BungeeMain.getCloudSupport().kick(event.getConnection().getUniqueId(), result);
-                }
+                event.setCancelled(true);
+                event.setCancelReason(result);
             }
 
             if (Universal.isRedis()) {

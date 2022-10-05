@@ -126,6 +126,7 @@ public class TestMethods implements MethodInterface {
 
     @Override
     public String getInternUUID(UUID uuid) {
+        fail("This method has not been setup for tests yet. Edit the me.leoko.advancedban.TestMethods Class! #36");
         return null;
     }
 

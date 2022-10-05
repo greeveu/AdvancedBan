@@ -224,6 +224,7 @@ public class UpdateManager {
                         "Disable Prefix: false"
                 ));
             }
+            //TODO: remove this bukkit-specific option
             if (!mi.contains(mi.getConfig(), "Friendly Register Commands")) {
                 lines.addAll(Arrays.asList("",
                         "# Register commands in a more friendly manner",

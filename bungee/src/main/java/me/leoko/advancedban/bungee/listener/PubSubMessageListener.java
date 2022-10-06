@@ -6,6 +6,7 @@ import lombok.Getter;
 import me.leoko.advancedban.MethodInterface;
 import me.leoko.advancedban.Universal;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
@@ -31,7 +32,7 @@ public class PubSubMessageListener implements Listener {
                 String[] msg = message.split(" ");
                 if (message.startsWith("kick ")) {
                     if (ProxyServer.getInstance().getPlayer(msg[1]) != null) {
-                        ProxyServer.getInstance().getPlayer(msg[1]).disconnect(message.substring((msg[0] + msg[1]).length() + 2));
+                        ProxyServer.getInstance().getPlayer(msg[1]).disconnect(new ComponentBuilder(message.substring((msg[0] + msg[1]).length() + 2)).create());
                     }
                 } else if (message.startsWith("notification ")) {
                     for (ProxiedPlayer pp : ProxyServer.getInstance().getPlayers()) {
@@ -41,10 +42,10 @@ public class PubSubMessageListener implements Listener {
                     }
                 } else if (message.startsWith("message ")) {
                     if (ProxyServer.getInstance().getPlayer(msg[1]) != null) {
-                        ProxyServer.getInstance().getPlayer(msg[1]).sendMessage(message.substring((msg[0] + msg[1]).length() + 2));
+                        ProxyServer.getInstance().getPlayer(msg[1]).sendMessage(new ComponentBuilder(message.substring((msg[0] + msg[1]).length() + 2)).create());
                     }
                     if (msg[1].equalsIgnoreCase("CONSOLE")) {
-                        ProxyServer.getInstance().getConsole().sendMessage(message.substring((msg[0] + msg[1]).length() + 2));
+                        ProxyServer.getInstance().getConsole().sendMessage(new ComponentBuilder(message.substring((msg[0] + msg[1]).length() + 2)).create());
                     }
                 }
                 break;

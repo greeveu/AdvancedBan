@@ -6,7 +6,7 @@ import me.leoko.advancedban.MethodInterface;
 import me.leoko.advancedban.Universal;
 
 public class DynamicDataSource {
-    private HikariConfig config = new HikariConfig();
+    private final HikariConfig config = new HikariConfig();
 
     public DynamicDataSource(boolean preferMySQL) throws ClassNotFoundException {
         MethodInterface mi = Universal.get().getMethods();

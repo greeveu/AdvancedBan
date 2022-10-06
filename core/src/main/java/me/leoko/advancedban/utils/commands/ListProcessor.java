@@ -16,10 +16,10 @@ import java.util.function.Function;
 import static me.leoko.advancedban.utils.CommandUtils.processName;
 
 public class ListProcessor implements Consumer<Command.CommandInput> {
-    private Function<String, List<Punishment>> listSupplier;
-    private String config;
-    private boolean history;
-    private boolean hasTarget;
+    private final Function<String, List<Punishment>> listSupplier;
+    private final String config;
+    private final boolean history;
+    private final boolean hasTarget;
 
     public ListProcessor(Function<String, List<Punishment>> listSupplier, String config, boolean history, boolean hasTarget) {
         this.listSupplier = listSupplier;

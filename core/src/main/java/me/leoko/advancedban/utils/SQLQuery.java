@@ -129,8 +129,8 @@ public enum SQLQuery {
             "SELECT * FROM PunishmentHistory ORDER BY start DESC LIMIT ?"
     );
 
-    private String mysql;
-    private String hsqldb;
+    private final String mysql;
+    private final String hsqldb;
 
     SQLQuery(String mysql, String hsqldb) {
         this.mysql = mysql;

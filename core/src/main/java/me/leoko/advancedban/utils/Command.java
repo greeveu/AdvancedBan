@@ -103,16 +103,14 @@ public enum Command {
             PunishmentType.KICK.getPerms(),
             ".+",
             new PunishmentTabCompleter(false),
-            input -> {
-                Universal.get().getMethods().isOnline(input.getPrimaryData(), isOnline -> {
-                    if (!isOnline) {
-                        MessageManager.sendMessage(input.getSender(), "Kick.NotOnline", true, "NAME", input.getPrimary());
-                        return;
-                    }
+            input -> Universal.get().getMethods().isOnline(input.getPrimaryData(), isOnline -> {
+                if (!isOnline) {
+                    MessageManager.sendMessage(input.getSender(), "Kick.NotOnline", true, "NAME", input.getPrimary());
+                    return;
+                }
 
-                    new PunishmentProcessor(PunishmentType.KICK).accept(input);
-                });
-            },
+                new PunishmentProcessor(PunishmentType.KICK).accept(input);
+            }),
             PunishmentType.KICK.getConfSection("Usage"),
             "kick"),
 
@@ -653,7 +651,7 @@ public enum Command {
     }
 
     public static class CommandInput {
-        private Object sender;
+        private final Object sender;
         private String[] args;
 
         CommandInput(Object sender, String[] args) {

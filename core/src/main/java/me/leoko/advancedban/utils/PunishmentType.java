@@ -1,8 +1,12 @@
 package me.leoko.advancedban.utils;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 /**
  * Created by Leoko @ dev.skamps.eu on 30.05.2016.
  */
+@AllArgsConstructor
 public enum PunishmentType {
     BAN("Ban", null, false, "ab.ban.perma"),
     TEMP_BAN("Tempban", BAN, true, "ab.ban.temp"),
@@ -15,17 +19,13 @@ public enum PunishmentType {
     KICK("Kick", null, false, "ab.kick.use"),
     NOTE("Note", null, false, "ab.note.use");
 
+    @Getter
     private final String name;
-    private final String perms;
     private final PunishmentType basic;
+    @Getter
     private final boolean temp;
-
-    PunishmentType(String name, PunishmentType basic, boolean temp, String perms) {
-        this.name = name;
-        this.basic = basic;
-        this.temp = temp;
-        this.perms = perms;
-    }
+    @Getter
+    private final String perms;
 
     public static PunishmentType fromCommandName(String cmd) {
         switch (cmd) {
@@ -57,20 +57,8 @@ public enum PunishmentType {
         }
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getPerms() {
-        return perms;
-    }
-
-    public boolean isTemp() {
-        return temp;
-    }
-
     public String getConfSection(String path) {
-        return name+"."+path;
+        return name + "." + path;
     }
 
     public PunishmentType getBasic() {
@@ -78,8 +66,9 @@ public enum PunishmentType {
     }
 
     public PunishmentType getPermanent() {
-        if(this == IP_BAN || this == TEMP_IP_BAN)
+        if (this == IP_BAN || this == TEMP_IP_BAN) {
             return IP_BAN;
+        }
 
         return getBasic();
     }

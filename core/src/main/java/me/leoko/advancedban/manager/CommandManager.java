@@ -16,7 +16,9 @@ public class CommandManager {
      * @return the command manager instance
      */
     public static synchronized CommandManager get() {
-        return instance == null ? instance = new CommandManager() : instance;
+        if (instance == null) instance = new CommandManager();
+
+        return instance;
     }
 
     /**
@@ -29,8 +31,9 @@ public class CommandManager {
     public void onCommand(final Object sender, final String cmd, final String[] args) {
         Universal.get().getMethods().runAsync(() -> {
             Command command = Command.getByName(cmd);
-            if (command == null)
+            if (command == null) {
                 return;
+            }
 
             String permission = command.getPermission();
             if (permission != null && !Universal.get().hasPerms(sender, permission)) {

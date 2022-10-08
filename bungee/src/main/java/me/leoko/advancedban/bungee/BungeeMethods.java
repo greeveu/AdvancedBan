@@ -113,8 +113,7 @@ public class BungeeMethods implements MethodInterface {
                 json = json.getAsJsonObject(keys[i]);
             }
 
-            return json.get(keys[keys.length - 1]).toString().replaceAll("\"", "");
-
+            return json.get(keys[keys.length - 1]).toString().replace("\"", "");
         } catch (Exception exc) {
             return null;
         }
@@ -180,7 +179,6 @@ public class BungeeMethods implements MethodInterface {
     @SuppressWarnings("deprecation")
     @Override
     public void sendMessage(Object player, String msg) {
-
         if (player instanceof ProxiedPlayer) {
             NotificationEvent notificationEvent = new NotificationEvent((ProxiedPlayer) player, msg);
             getPlugin().getProxy().getPluginManager().callEvent(notificationEvent);
@@ -210,6 +208,7 @@ public class BungeeMethods implements MethodInterface {
         try {
             onlineOnThisServer = getPlayer(name).getAddress() != null;
         } catch (NullPointerException ignored) {
+            // ignored
         }
 
         if (onlineOnThisServer) {
@@ -332,7 +331,7 @@ public class BungeeMethods implements MethodInterface {
     public boolean callCMD(Object player, String cmd) {
         Punishment pnt;
         if (Universal.get().isMuteCommand(cmd.substring(1))
-                && (pnt = PunishmentManager.get().getMute(UUIDManager.get().getUUID(getName(player)))) != null) {
+            && (pnt = PunishmentManager.get().getMute(UUIDManager.get().getUUID(getName(player)))) != null) {
             sendMessage(player, pnt.getLayout());
             return true;
         }
@@ -347,16 +346,16 @@ public class BungeeMethods implements MethodInterface {
     @Override
     public String parseJSON(InputStreamReader json, String key) {
         JsonElement element = new JsonParser().parse(json);
-        if (element instanceof JsonNull) {
-            return null;
-        }
-        JsonElement obj = ((JsonObject) element).get(key);
-        return obj != null ? obj.toString().replace("\"", "") : null;
+        return this.processParsedJson(element, key);
     }
 
     @Override
     public String parseJSON(String json, String key) {
         JsonElement element = new JsonParser().parse(json);
+        return this.processParsedJson(element, key);
+    }
+
+    private String processParsedJson(JsonElement element, String key) {
         if (element instanceof JsonNull) {
             return null;
         }
@@ -440,9 +439,9 @@ public class BungeeMethods implements MethodInterface {
             Universal.get().getMethods().runAsync(() -> RedisBungee.getApi().sendChannelMessage("advancedban:main:v1", "notification " + perm + " " + notification));
         } else {
             ProxyServer.getInstance().getPlayers()
-                    .stream()
-                    .filter(pp -> (Universal.get().hasPerms(pp, perm)))
-                    .forEachOrdered(pp -> sendMessage(pp, notification));
+                .stream()
+                .filter(pp -> (Universal.get().hasPerms(pp, perm)))
+                .forEachOrdered(pp -> sendMessage(pp, notification));
         }
     }
 

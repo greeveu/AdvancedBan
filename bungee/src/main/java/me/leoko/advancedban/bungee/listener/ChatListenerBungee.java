@@ -36,7 +36,6 @@ public class ChatListenerBungee implements Listener {
         }
 
         final Command command = Command.getByName(commandName.substring(1));
-
         if (command == null || !(event.getSender() instanceof ProxiedPlayer)) {
             return;
         }

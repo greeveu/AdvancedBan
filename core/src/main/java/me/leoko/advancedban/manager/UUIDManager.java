@@ -17,9 +17,9 @@ public class UUIDManager {
     private static UUIDManager instance = null;
     private FetcherMode mode;
     private final Map<String, String> activeUUIDs = new HashMap<>();
-    
+
     private MethodInterface mi() {
-    	return Universal.get().getMethods();
+        return Universal.get().getMethods();
     }
 
     /**
@@ -28,7 +28,9 @@ public class UUIDManager {
      * @return the uuid manager instance
      */
     public static synchronized UUIDManager get() {
-        return instance == null ? instance = new UUIDManager() : instance;
+        if (instance == null) instance = new UUIDManager();
+
+        return instance;
     }
 
     /**
@@ -36,7 +38,7 @@ public class UUIDManager {
      * based on the configured preference and the servers capabilities.
      */
     public void setup() {
-    	MethodInterface mi = mi();
+        MethodInterface mi = mi();
         if (mi.getBoolean(mi.getConfig(), "UUID-Fetcher.Dynamic", true)) {
             if (!mi.isOnlineMode()) {
                 mode = FetcherMode.DISABLED;
@@ -66,15 +68,17 @@ public class UUIDManager {
      * @return the uuid
      */
     public String getInitialUUID(String name) {
-    	MethodInterface mi = mi();
+        MethodInterface mi = mi();
         name = name.toLowerCase();
-        if (mode == FetcherMode.DISABLED)
+        if (mode == FetcherMode.DISABLED) {
             return name;
+        }
 
         if (mode == FetcherMode.INTERN || mode == FetcherMode.MIXED) {
             String internUUID = mi.getInternUUID(name);
-            if (mode == FetcherMode.INTERN || internUUID != null)
+            if (mode == FetcherMode.INTERN || internUUID != null) {
                 return internUUID;
+            }
         }
 
         String uuid = null;
@@ -122,12 +126,15 @@ public class UUIDManager {
      * @param uuid
      */
     public UUID fromString(String uuid) {
-        if (!uuid.contains("-") && uuid.length() == 32)
-            uuid = uuid
-                    .replaceFirst(
-                            "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)", "$1-$2-$3-$4-$5");
+        if (!uuid.contains("-") && uuid.length() == 32) {
+            uuid = uuid.replaceFirst("(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)", "$1-$2-$3-$4-$5");
+        }
 
-        return uuid.length() == 36 && uuid.contains("-") ? UUID.fromString(uuid) : null;
+        if (uuid.length() != 36 || !uuid.contains("-")) {
+            return null;
+        }
+
+        return UUID.fromString(uuid);
     }
 
     /**
@@ -176,14 +183,16 @@ public class UUIDManager {
      * @return the name from uuid
      */
     public String getNameFromUUID(String uuid, boolean forceInitial) {
-    	MethodInterface mi = mi();
-        if (mode == FetcherMode.DISABLED)
+        MethodInterface mi = mi();
+        if (mode == FetcherMode.DISABLED) {
             return uuid;
+        }
 
         if (mode == FetcherMode.INTERN || mode == FetcherMode.MIXED) {
             String internName = mi.getName(uuid);
-            if (mode == FetcherMode.INTERN || internName != null)
+            if (mode == FetcherMode.INTERN || internName != null) {
                 return internName;
+            }
         }
 
         if (!forceInitial) {
@@ -193,6 +202,8 @@ public class UUIDManager {
             }
         }
 
+        //FIXME wtf - oh and also this api is no longer available:
+        // This endpoint has been deprecated by Mojang and was removed on 13 September 2022 at 9:25 AM CET to "improve player safety and data privacy". My ass.
         try (Scanner scanner = new Scanner(new URL("https://api.mojang.com/user/profiles/" + uuid + "/names").openStream(), "UTF-8")) {
             String s = scanner.useDelimiter("\\A").next();
             s = s.substring(s.lastIndexOf('{'), s.lastIndexOf('}') + 1);
@@ -202,12 +213,10 @@ public class UUIDManager {
         }
     }
 
-
-
     private String askAPI(String url, String name, String key) throws IOException {
-    	MethodInterface mi = mi();
+        MethodInterface mi = mi();
         name = name.toLowerCase();
-        HttpURLConnection request = (HttpURLConnection) new URL(url.replaceAll("%NAME%", name).replaceAll("%TIMESTAMP%", new Date().getTime() + "")).openConnection();
+        HttpURLConnection request = (HttpURLConnection) new URL(url.replace("%NAME%", name).replace("%TIMESTAMP%", new Date().getTime() + "")).openConnection();
         request.connect();
 
         String uuid = mi.parseJSON(new InputStreamReader(request.getInputStream()), key);

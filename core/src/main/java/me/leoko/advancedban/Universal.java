@@ -50,7 +50,9 @@ public class Universal {
      * @return the universal instance
      */
     public static Universal get() {
-        return instance == null ? instance = new Universal() : instance;
+        if (instance == null) instance = new Universal();
+
+        return instance;
     }
 
     /**
@@ -117,16 +119,16 @@ public class Universal {
 
         if (mi.getBoolean(mi.getConfig(), "DetailedDisableMessage", true)) {
             mi.log("\n \n&8[]=====[&7Disabling AdvancedBan&8]=====[]"
-                    + "\n&8| &cInformation:"
-                    + "\n&8|   &cName: &7AdvancedBan"
-                    + "\n&8|   &cDeveloper: &7Leoko"
-                    + "\n&8|   &cVersion: &7" + getMethods().getVersion()
-                    + "\n&8|   &cStorage: &7" + (DatabaseManager.get().isUseMySQL() ? "MySQL (external)" : "HSQLDB (local)")
-                    + "\n&8| &cSupport:"
-                    + "\n&8|   &cGithub: &7https://github.com/DevLeoko/AdvancedBan/issues"
-                    + "\n&8|   &cDiscord: &7https://discord.gg/ycDG6rS"
-                    + "\n&8| &cTwitter: &7@LeokoGar"
-                    + "\n&8[]================================[]&r\n ");
+                + "\n&8| &cInformation:"
+                + "\n&8|   &cName: &7AdvancedBan"
+                + "\n&8|   &cDeveloper: &7Leoko"
+                + "\n&8|   &cVersion: &7" + getMethods().getVersion()
+                + "\n&8|   &cStorage: &7" + (DatabaseManager.get().isUseMySQL() ? "MySQL (external)" : "HSQLDB (local)")
+                + "\n&8| &cSupport:"
+                + "\n&8|   &cGithub: &7https://github.com/DevLeoko/AdvancedBan/issues"
+                + "\n&8|   &cDiscord: &7https://discord.gg/ycDG6rS"
+                + "\n&8| &cTwitter: &7@LeokoGar"
+                + "\n&8[]================================[]&r\n ");
         } else {
             mi.log("&cDisabling AdvancedBan on Version &7" + getMethods().getVersion());
             mi.log("&cCoded by Leoko &8| &7Twitter: @LeokoGar");
@@ -171,16 +173,18 @@ public class Universal {
      */
     public String getFromURL(String surl) {
         String response = null;
+
         try {
             URL url = new URL(surl);
-            Scanner s = new Scanner(url.openStream());
-            if (s.hasNext()) {
-                response = s.next();
-                s.close();
+            try (Scanner s = new Scanner(url.openStream())) {
+                if (s.hasNext()) {
+                    response = s.next();
+                }
             }
         } catch (IOException exc) {
             debug("!! Failed to connect to URL: " + surl);
         }
+
         return response;
     }
 
@@ -196,7 +200,7 @@ public class Universal {
 
     /**
      * Visible for testing. Do not use this. Please use {@link #isMuteCommand(String)}.
-     * 
+     *
      * @param cmd          the command
      * @param muteCommands the mute commands from the config
      * @return true if the command matched any of the mute commands.
@@ -217,9 +221,9 @@ public class Universal {
 
     /**
      * Visible for testing. Do not use this.
-     * 
+     *
      * @param commandWords the command run by a player, separated into its words
-     * @param muteCommand a mute command from the config
+     * @param muteCommand  a mute command from the config
      * @return true if they match, false otherwise
      */
     boolean muteCommandMatches(String[] commandWords, String muteCommand) {
@@ -229,19 +233,20 @@ public class Universal {
         }
         // Advanced equality check
         // Essentially a case-insensitive "startsWith" for arrays
-        if (muteCommand.indexOf(' ') != -1) {
-            String[] muteCommandWords = muteCommand.split(" ");
-            if (muteCommandWords.length > commandWords.length) {
+        if (muteCommand.indexOf(' ') == -1) {
+            return false;
+        }
+
+        String[] muteCommandWords = muteCommand.split(" ");
+        if (muteCommandWords.length > commandWords.length) {
+            return false;
+        }
+        for (int n = 0; n < muteCommandWords.length; n++) {
+            if (!muteCommandWords[n].equalsIgnoreCase(commandWords[n])) {
                 return false;
             }
-            for (int n = 0; n < muteCommandWords.length; n++) {
-                if (!muteCommandWords[n].equalsIgnoreCase(commandWords[n])) {
-                    return false;
-                }
-            }
-            return true;
         }
-        return false;
+        return true;
     }
 
     /**
@@ -252,11 +257,13 @@ public class Universal {
      */
     public boolean isExemptPlayer(String name) {
         List<String> exempt = getMethods().getStringList(getMethods().getConfig(), "ExemptPlayers");
-        if (exempt != null) {
-            for (String str : exempt) {
-                if (name.equalsIgnoreCase(str)) {
-                    return true;
-                }
+        if (exempt == null) {
+            return false;
+        }
+
+        for (String str : exempt) {
+            if (name.equalsIgnoreCase(str)) {
+                return true;
             }
         }
         return false;
@@ -310,13 +317,14 @@ public class Universal {
         if (mi.hasPerms(player, perms)) {
             return true;
         }
+        if (!mi.getBoolean(mi.getConfig(), "EnableAllPermissionNodes", false)) {
+            return false;
+        }
 
-        if (mi.getBoolean(mi.getConfig(), "EnableAllPermissionNodes", false)) {
-            while (perms.contains(".")) {
-                perms = perms.substring(0, perms.lastIndexOf('.'));
-                if (mi.hasPerms(player, perms + ".all")) {
-                    return true;
-                }
+        while (perms.contains(".")) {
+            perms = perms.substring(0, perms.lastIndexOf('.'));
+            if (mi.hasPerms(player, perms + ".all")) {
+                return true;
             }
         }
         return false;

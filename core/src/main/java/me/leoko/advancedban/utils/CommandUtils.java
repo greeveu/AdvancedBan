@@ -9,13 +9,17 @@ import me.leoko.advancedban.manager.UUIDManager;
 import java.util.regex.Pattern;
 
 public class CommandUtils {
-    private final static Pattern UUID_REGEX_PATTERN =
-            Pattern.compile("^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$");
+    private CommandUtils() {
+        throw new IllegalStateException("Utility class");
+    }
+
+    private static final Pattern UUID_REGEX_PATTERN =
+        Pattern.compile("^\\{?\\p{XDigit}{8}-(\\p{XDigit}{4}-){3}\\p{XDigit}{12}}?$");
 
     public static Punishment getPunishment(String target, PunishmentType type) {
         return type == PunishmentType.MUTE
-                ? PunishmentManager.get().getMute(target)
-                : PunishmentManager.get().getBan(target);
+            ? PunishmentManager.get().getMute(target)
+            : PunishmentManager.get().getBan(target);
     }
 
     // Removes name argument and returns uuid (null if failed)
@@ -34,9 +38,9 @@ public class CommandUtils {
             uuid = UUIDManager.get().getUUID(name.toLowerCase());
         }
 
-        if (uuid == null)
-            MessageManager.sendMessage(input.getSender(), "General.FailedFetch",
-                    true, "NAME", name);
+        if (uuid == null) {
+            MessageManager.sendMessage(input.getSender(), "General.FailedFetch", true, "NAME", name);
+        }
 
         return uuid;
     }
@@ -45,16 +49,16 @@ public class CommandUtils {
     public static String processIP(Command.CommandInput input) {
         String name = input.getPrimaryData();
         input.next();
-        if (name.matches("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")) {
+        if (name.matches("^(?:\\d{1,3}\\.){3}\\d{1,3}$")) {
             return name;
         }
-		String ip = Universal.get().getIps().get(name);
 
-		if (ip == null)
-		    MessageManager.sendMessage(input.getSender(), "Ipban.IpNotCashed",
-		            true, "NAME", name);
+        String ip = Universal.get().getIps().get(name);
+        if (ip == null) {
+            MessageManager.sendMessage(input.getSender(), "Ipban.IpNotCashed", true, "NAME", name);
+        }
 
-		return ip;
+        return ip;
     }
 
     // Builds reason from remaining arguments (null if failed)
@@ -63,8 +67,7 @@ public class CommandUtils {
         String reason = String.join(" ", input.getArgs());
 
         if (reason.matches("[~@].+") && !mi.contains(mi.getLayouts(), "Message." + input.getPrimary().substring(1))) {
-            MessageManager.sendMessage(input.getSender(), "General.LayoutNotFound",
-                    true, "NAME", input.getPrimary().substring(1));
+            MessageManager.sendMessage(input.getSender(), "General.LayoutNotFound", true, "NAME", input.getPrimary().substring(1));
             return null;
         }
 
@@ -72,9 +75,6 @@ public class CommandUtils {
     }
 
     public static boolean isValidUUID(String str) {
-        if (str == null) {
-            return false;
-        }
-        return UUID_REGEX_PATTERN.matcher(str).matches();
+        return str != null && UUID_REGEX_PATTERN.matcher(str).matches();
     }
 }

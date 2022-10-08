@@ -266,10 +266,10 @@ public class BungeeMethods implements MethodInterface {
         ProxyServer.getInstance().getScheduler().runAsync(getPlugin(), rn);
     }
 
-    @Override
     /**
      * WARNING not Sync to Main-Thread
      */
+    @Override
     public void runSync(Runnable rn) {
         rn.run(); //TODO WARNING not Sync to Main-Thread
     }
@@ -351,7 +351,7 @@ public class BungeeMethods implements MethodInterface {
             return null;
         }
         JsonElement obj = ((JsonObject) element).get(key);
-        return obj != null ? obj.toString().replaceAll("\"", "") : null;
+        return obj != null ? obj.toString().replace("\"", "") : null;
     }
 
     @Override
@@ -361,7 +361,7 @@ public class BungeeMethods implements MethodInterface {
             return null;
         }
         JsonElement obj = ((JsonObject) element).get(key);
-        return obj != null ? obj.toString().replaceAll("\"", "") : null;
+        return obj != null ? obj.toString().replace("\"", "") : null;
     }
 
     @Override
@@ -437,20 +437,18 @@ public class BungeeMethods implements MethodInterface {
     @Override
     public void notify(String perm, String notification) {
         if (Universal.isRedis()) {
-            Universal.get().getMethods().runAsync(() -> {
-                RedisBungee.getApi().sendChannelMessage("advancedban:main:v1", "notification " + perm + " " + notification);
-            });
+            Universal.get().getMethods().runAsync(() -> RedisBungee.getApi().sendChannelMessage("advancedban:main:v1", "notification " + perm + " " + notification));
         } else {
             ProxyServer.getInstance().getPlayers()
                     .stream()
-                    .filter((pp) -> (Universal.get().hasPerms(pp, perm)))
-                    .forEachOrdered((pp) -> sendMessage(pp, notification));
+                    .filter(pp -> (Universal.get().hasPerms(pp, perm)))
+                    .forEachOrdered(pp -> sendMessage(pp, notification));
         }
     }
 
     @Override
     public void log(String msg) {
-        ProxyServer.getInstance().getConsole().sendMessage(TextComponent.fromLegacyText(msg.replaceAll("&", "§")));
+        ProxyServer.getInstance().getConsole().sendMessage(TextComponent.fromLegacyText(msg.replace("&", "§")));
     }
 
     @Override

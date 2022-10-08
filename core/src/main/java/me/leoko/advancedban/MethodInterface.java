@@ -173,7 +173,6 @@ public interface MethodInterface {
      * Check whether player is online.
      *
      * @param name the name
-     * @return the boolean
      */
     void isOnline(String name, Consumer<Boolean> callback);
 

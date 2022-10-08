@@ -4,10 +4,10 @@ import me.leoko.advancedban.Universal;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.logging.Level;
@@ -53,7 +53,7 @@ public class LogManager {
             calendar.setTimeInMillis(latestLog.lastModified());
             if (day != calendar.get(Calendar.DAY_OF_MONTH) || force) {
                 try {
-                    if (FileUtils.readLines(latestLog, "UTF8").size() <= 0) {
+                    if (FileUtils.readLines(latestLog, "UTF8").size() == 0) {
                         return;
                     }
                     int filen = 1;
@@ -71,7 +71,7 @@ public class LogManager {
     }
 
     private void gzipFile(InputStream in, String to) throws IOException {
-    	try (GZIPOutputStream out = new GZIPOutputStream(new FileOutputStream(to))) {
+    	try (GZIPOutputStream out = new GZIPOutputStream(Files.newOutputStream(Paths.get(to)))) {
             byte[] buffer = new byte[4096];
             int bytesRead;
             while ((bytesRead = in.read(buffer)) != -1) {

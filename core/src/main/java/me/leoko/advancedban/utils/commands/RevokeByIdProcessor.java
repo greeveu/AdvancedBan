@@ -9,8 +9,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class RevokeByIdProcessor implements Consumer<Command.CommandInput> {
-    private String path;
-    private Function<Integer, Punishment> resolver;
+    private final String path;
+    private final Function<Integer, Punishment> resolver;
 
     public RevokeByIdProcessor(String path, Function<Integer, Punishment> resolver) {
         this.path = path;

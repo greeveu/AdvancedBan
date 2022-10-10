@@ -74,7 +74,6 @@ public class Universal {
             debugException(ex);
         }
 
-        mi.setupMetrics();
         PunishmentManager.get().setup();
 
         for (Command command : Command.values()) {

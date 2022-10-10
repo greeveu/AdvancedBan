@@ -63,11 +63,6 @@ public class TestMethods implements MethodInterface {
     }
 
     @Override
-    public void setupMetrics() {
-        //No metrics for testing needed
-    }
-
-    @Override
     public boolean isBungee() {
         return false;
     }

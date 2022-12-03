@@ -1,5 +1,6 @@
 package me.leoko.advancedban.bungee.listener;
 
+import com.imaginarycode.minecraft.redisbungee.RedisBungee;
 import me.leoko.advancedban.Universal;
 import me.leoko.advancedban.bungee.BungeeMain;
 import me.leoko.advancedban.manager.PunishmentManager;
@@ -9,7 +10,6 @@ import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
-import redis.clients.jedis.Jedis;
 
 /**
  * Created by Leoko @ dev.skamps.eu on 24.07.2016.
@@ -19,8 +19,9 @@ public class ConnectionListenerBungee implements Listener {
     @SuppressWarnings("deprecation")
     @EventHandler(priority = EventPriority.LOW)
     public void onConnection(LoginEvent event) {
-        if (event.isCancelled())
+        if (event.isCancelled()) {
             return;
+        }
 
         UUIDManager.get().supplyInternUUID(event.getConnection().getName(), event.getConnection().getUniqueId());
         event.registerIntent((BungeeMain) Universal.get().getMethods().getPlugin());
@@ -28,21 +29,12 @@ public class ConnectionListenerBungee implements Listener {
             String result = Universal.get().callConnection(event.getConnection().getName(), event.getConnection().getAddress().getAddress().getHostAddress());
 
             if (result != null) {
-                if (BungeeMain.getCloudSupport() == null) {
-                    event.setCancelled(true);
-                    event.setCancelReason(result);
-                } else {
-                    BungeeMain.getCloudSupport().kick(event.getConnection().getUniqueId(), result);
-                }
+                event.setCancelled(true);
+                event.setCancelReason(result);
             }
 
             if (Universal.isRedis()) {
-                Universal.get().getMethods().runAsync(() -> {
-                    try (Jedis jedis = BungeeMain.getInstance().getJedisPool().getResource()) {
-                        jedis.publish("advancedban:connection:v1",
-                                event.getConnection().getName() + "," + event.getConnection().getAddress().getAddress().getHostAddress());
-                    }
-                });
+                Universal.get().getMethods().runAsync(() -> RedisBungee.getApi().sendChannelMessage("advancedban:connection:v1", event.getConnection().getName() + "," + event.getConnection().getAddress().getAddress().getHostAddress()));
             }
             event.completeIntent((BungeeMain) Universal.get().getMethods().getPlugin());
         });

@@ -7,6 +7,7 @@ import me.leoko.advancedban.utils.tabcompletion.TabCompleter;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
@@ -63,11 +64,6 @@ public interface MethodInterface {
      * @return the layouts
      */
     Object getLayouts();
-
-    /**
-     * Set up metrics.
-     */
-    void setupMetrics();
 
     boolean isBungee();
 
@@ -144,6 +140,14 @@ public interface MethodInterface {
     String getInternUUID(String player);
 
     /**
+     * Convert a player uuid to string based on the intern uuid rules.
+     *
+     * @param uuid the uuid
+     * @return the intern uuid
+     */
+    String getInternUUID(UUID uuid);
+
+    /**
      * Check if player has the given permission.
      *
      * @param player the player
@@ -164,7 +168,6 @@ public interface MethodInterface {
      * Check whether player is online.
      *
      * @param name the name
-     * @return the boolean
      */
     void isOnline(String name, Consumer<Boolean> callback);
 

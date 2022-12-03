@@ -4,10 +4,11 @@ import me.leoko.advancedban.Universal;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.logging.Level;
@@ -15,11 +16,10 @@ import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
 /**
- *
  * @author Beelzebu
  */
 public class LogManager {
-	
+
     private final File logsFolder;
 
     public LogManager() {
@@ -30,10 +30,15 @@ public class LogManager {
         }
         checkLastLog(true);
         File[] fList = logsFolder.listFiles();
-        // Auto purge for old logs
-        for (File file : fList) {
-            if (file.isFile() && file.getName().contains(".gz") && (System.currentTimeMillis() - file.lastModified()) >= universal.getMethods().getInteger(universal.getMethods().getConfig(), "Log Purge Days") * 86400000L) {
-                file.delete();
+
+        if (fList != null) {
+            // Auto purge for old logs
+            for (File file : fList) {
+                if (file.isFile() && file.getName().contains(".gz")
+                    && (System.currentTimeMillis() - file.lastModified()) >= universal.getMethods().getInteger(universal.getMethods().getConfig(), "Log Purge Days") * 86400000L
+                ) {
+                    file.delete();
+                }
             }
         }
     }
@@ -49,37 +54,41 @@ public class LogManager {
         int day = calendar.get(Calendar.DAY_OF_MONTH);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         File latestLog = new File(logsFolder, "latest.log");
-        if (latestLog.exists()) {
-            calendar.setTimeInMillis(latestLog.lastModified());
-            if (day != calendar.get(Calendar.DAY_OF_MONTH) || force) {
-                try {
-                    if (FileUtils.readLines(latestLog, "UTF8").size() <= 0) {
-                        return;
-                    }
-                    int filen = 1;
-                    while (new File(logsFolder, sdf.format(latestLog.lastModified()) + "-" + filen + ".log.gz").exists()) {
-                        filen++;
-                    }
-                    gzipFile(Files.newInputStream(latestLog.toPath()), logsFolder + "/" + sdf.format(latestLog.lastModified()) + "-" + filen + ".log.gz");
-                    latestLog.delete();
-                    latestLog.createNewFile();
-                } catch (IOException ex) {
-                    Logger.getLogger(LogManager.class.getName()).log(Level.WARNING, "An unexpected error has occurred while trying to compress the latest log file. {0}", ex.getMessage());
-                }
+        if (!latestLog.exists()) {
+            return;
+        }
+
+        calendar.setTimeInMillis(latestLog.lastModified());
+        if (day == calendar.get(Calendar.DAY_OF_MONTH) && !force) {
+            return;
+        }
+
+        try {
+            if (FileUtils.readLines(latestLog, StandardCharsets.UTF_8).isEmpty()) {
+                return;
             }
+            int filen = 1;
+            while (new File(logsFolder, sdf.format(latestLog.lastModified()) + "-" + filen + ".log.gz").exists()) {
+                filen++;
+            }
+            gzipFile(Files.newInputStream(latestLog.toPath()), logsFolder + "/" + sdf.format(latestLog.lastModified()) + "-" + filen + ".log.gz");
+            latestLog.delete();
+            latestLog.createNewFile();
+        } catch (IOException ex) {
+            Logger.getLogger(LogManager.class.getName()).log(Level.WARNING, "An unexpected error has occurred while trying to compress the latest log file. {0}", ex.getMessage());
         }
     }
 
     private void gzipFile(InputStream in, String to) throws IOException {
-    	try (GZIPOutputStream out = new GZIPOutputStream(new FileOutputStream(to))) {
+        try (GZIPOutputStream out = new GZIPOutputStream(Files.newOutputStream(Paths.get(to)))) {
             byte[] buffer = new byte[4096];
             int bytesRead;
             while ((bytesRead = in.read(buffer)) != -1) {
                 out.write(buffer, 0, bytesRead);
             }
-    	} finally {
-    		in.close();
-    	}
+        } finally {
+            in.close();
+        }
     }
-    
+
 }

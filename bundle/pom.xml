@@ -7,19 +7,13 @@
     <parent>
         <groupId>me.leoko.advancedban</groupId>
         <artifactId>AdvancedBan</artifactId>
-        <version>3.0.0</version>
+        <version>4.0.0</version>
     </parent>
 
     <artifactId>AdvancedBan-Bundle</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>
-        <dependency>
-            <groupId>me.leoko.advancedban</groupId>
-            <artifactId>AdvancedBan-Bukkit</artifactId>
-            <version>${project.version}</version>
-            <scope>runtime</scope>
-        </dependency>
         <dependency>
             <groupId>me.leoko.advancedban</groupId>
             <artifactId>AdvancedBan-Bungee</artifactId>
@@ -52,10 +46,6 @@
                     		<pattern>org.hsqldb</pattern>
                     		<shadedPattern>${project.groupId}.shaded.org.hsqldb</shadedPattern>
                     	</relocation>
-                        <relocation>
-                            <pattern>org.bstats</pattern>
-                            <shadedPattern>${project.groupId}.shaded.org.bstats</shadedPattern>
-                        </relocation>
                     </relocations>
                     <transformers>
                         <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>

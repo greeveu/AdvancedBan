@@ -16,15 +16,16 @@ public class CleanTabCompleter implements MutableTabCompleter {
     public ArrayList<String> onTabComplete(Object user, String[] args) {
         ArrayList<String> suggestions = rawTabCompleter.onTabComplete(user, args);
 
-        if(!suggestions.isEmpty() && suggestions.get(0).equals(PLAYER_PLACEHOLDER)) {
+        if (!suggestions.isEmpty() && suggestions.get(0).equals(PLAYER_PLACEHOLDER)) {
             suggestions.remove(0);
-            for (Object player : Universal.get().getMethods().getOnlinePlayers()){
+            for (Object player : Universal.get().getMethods().getOnlinePlayers()) {
                 suggestions.add(Universal.get().getMethods().getName(player));
             }
         }
 
-        if(args.length > 0)
+        if (args.length > 0) {
             suggestions.removeIf(s -> !s.startsWith(args[args.length - 1]));
+        }
 
         return suggestions;
     }

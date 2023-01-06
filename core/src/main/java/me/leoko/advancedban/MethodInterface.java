@@ -172,6 +172,14 @@ public interface MethodInterface {
     void isOnline(String name, Consumer<Boolean> callback);
 
     /**
+     * Check if the player is on the local server
+     *
+     * @param name the name
+     * @return true if the player is online on this server
+     */
+    boolean isOnlineOnThisServer(String name);
+
+    /**
      * Get online player by name.
      *
      * @param name the name

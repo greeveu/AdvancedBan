@@ -119,32 +119,26 @@ public class PunishmentProcessor implements Consumer<Command.CommandInput> {
         MethodInterface mi = Universal.get().getMethods();
         String dataName = name.toLowerCase();
 
-        mi.isOnline(dataName, isPlayerOnline -> {
-            boolean exempt;
-            if (isPlayerOnline) {
-                Object onlineTarget = mi.getPlayer(dataName);
-                exempt = canNotPunish(
-                    perms -> mi.hasPerms(sender, perms),
-                    perms -> mi.hasPerms(onlineTarget, perms),
-                    type.getName()
-                );
-            } else {
-                final Permissionable offlinePermissionPlayer = mi.getOfflinePermissionPlayer(name);
-                exempt = Universal.get().isExemptPlayer(dataName)
-                    || canNotPunish(
-                    perms -> mi.hasPerms(sender, perms),
-                    offlinePermissionPlayer::hasPermission,
-                    type.getName()
-                );
-            }
+        boolean exempt;
+        if (mi.isOnlineOnThisServer(dataName)) {
+            Object onlineTarget = mi.getPlayer(dataName);
+            exempt = canNotPunish(
+                perms -> mi.hasPerms(sender, perms),
+                perms -> mi.hasPerms(onlineTarget, perms),
+                type.getName()
+            );
+        } else {
+            final Permissionable offlinePermissionPlayer = mi.getOfflinePermissionPlayer(name);
+            exempt = Universal.get().isExemptPlayer(dataName)
+                || canNotPunish(perms -> mi.hasPerms(sender, perms), offlinePermissionPlayer::hasPermission, type.getName());
+        }
 
-            if (exempt) {
-                MessageManager.sendMessage(sender, type.getBasic().getName() + ".Exempt", true, "NAME", name);
-                callback.accept(true);
-                return;
-            }
-            callback.accept(false);
-        });
+        if (exempt) {
+            MessageManager.sendMessage(sender, type.getBasic().getName() + ".Exempt", true, "NAME", name);
+            callback.accept(true);
+            return;
+        }
+        callback.accept(false);
     }
 
     // Check based on exempt level if some is able to ban a player

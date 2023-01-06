@@ -141,6 +141,11 @@ public class TestMethods implements MethodInterface {
     }
 
     @Override
+    public boolean isOnlineOnThisServer(String name) {
+        return false;
+    }
+
+    @Override
     public Object getPlayer(String name) {
         fail("This method has not been setup for tests yet. Edit the me.leoko.advancedban.TestMethods Class! #10");
         return null;

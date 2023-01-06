@@ -195,15 +195,7 @@ public class BungeeMethods implements MethodInterface {
 
     @Override
     public void isOnline(String name, Consumer<Boolean> callback) {
-        //Check if the player is on the local server
-        boolean onlineOnThisServer = false;
-        try {
-            onlineOnThisServer = getPlayer(name).getAddress() != null;
-        } catch (NullPointerException ignored) {
-            // ignored
-        }
-
-        if (onlineOnThisServer) {
+        if (this.isOnlineOnThisServer(name)) {
             callback.accept(true);
             return;
         }
@@ -220,6 +212,13 @@ public class BungeeMethods implements MethodInterface {
             PubSubMessageListener.getFindFoundMap().remove(id);
             callback.accept(false);
         }, 500, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public boolean isOnlineOnThisServer(String name) {
+        ProxiedPlayer proxiedPlayer = this.getPlayer(name);
+
+        return proxiedPlayer != null && proxiedPlayer.getAddress() != null;
     }
 
     @Override

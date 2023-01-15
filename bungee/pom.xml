@@ -57,7 +57,7 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec</artifactId>
-            <version>4.1.82.Final</version>
+            <version>4.1.86.Final</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
@@ -65,9 +65,9 @@
             <version>4.1.82.Final</version>
         </dependency>
         <dependency>
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-            <version>1.33</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.9.2</version>
         </dependency>
     </dependencies>
 

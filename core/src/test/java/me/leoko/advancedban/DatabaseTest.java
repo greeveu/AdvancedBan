@@ -24,12 +24,9 @@ public class DatabaseTest {
     @Test
     public void shouldAutomaticallyDetectDatabaseType(){
         // DatabaseManagement behaviour changed in 2.1.9
-//        assertFalse("By default no connection with MySQL should be established as it's disabled", DatabaseManager.get().isUseMySQL() );
 //        assertFalse("MySQL should not be failed as it should not even try establishing any connection", DatabaseManager.get().isFailedMySQL());
-//        assertTrue("The HSQLDB-Connection should be valid", DatabaseManager.get().isConnectionValid(3));
 //        DatabaseManager.get().shutdown();
 //        DatabaseManager.get().setup(true);
-//        assertFalse("Because of a failed connection MySQL should be disabled", DatabaseManager.get().isUseMySQL() );
 //        assertTrue("MySQL should be failed as the connection can not succeed", DatabaseManager.get().isFailedMySQL());
     }
 

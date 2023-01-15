@@ -50,7 +50,7 @@ public class PunishmentTest {
         int id = punishment.getId();
         System.out.println("Punishment ID >> "+id);
         DatabaseManager.get().shutdown();
-        DatabaseManager.get().setup(false);
+
         Punishment punishment1 = PunishmentManager.get().getPunishment(id);
         assertNotNull(punishment1, "Punishment should exist");
         assertEquals("Persistence test", punishment1.getReason(), "Reason should still match");

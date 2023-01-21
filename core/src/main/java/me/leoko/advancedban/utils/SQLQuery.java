@@ -1,7 +1,5 @@
 package me.leoko.advancedban.utils;
 
-import me.leoko.advancedban.manager.DatabaseManager;
-
 /**
  * Created by Leo on 29.07.2017.
  */
@@ -11,7 +9,7 @@ public enum SQLQuery {
             "`id` int NOT NULL AUTO_INCREMENT," +
             "`name` VARCHAR(16) NULL DEFAULT NULL," +
             "`uuid` VARCHAR(35) NULL DEFAULT NULL," +
-            "`reason` VARCHAR(100) NULL DEFAULT NULL," +
+            "`reason` VARCHAR(255) NULL DEFAULT NULL," +
             "`operator` VARCHAR(16) NULL DEFAULT NULL," +
             "`punishmentType` VARCHAR(16) NULL DEFAULT NULL," +
             "`start` LONG DEFAULT NULL," +
@@ -24,7 +22,7 @@ public enum SQLQuery {
             "`id` int NOT NULL AUTO_INCREMENT," +
             "`name` VARCHAR(16) NULL DEFAULT NULL," +
             "`uuid` VARCHAR(35) NULL DEFAULT NULL," +
-            "`reason` VARCHAR(100) NULL DEFAULT NULL," +
+            "`reason` VARCHAR(255) NULL DEFAULT NULL," +
             "`operator` VARCHAR(16) NULL DEFAULT NULL," +
             "`punishmentType` VARCHAR(16) NULL DEFAULT NULL," +
             "`start` LONG DEFAULT NULL," +

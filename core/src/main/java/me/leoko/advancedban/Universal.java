@@ -68,7 +68,7 @@ public class Universal {
         UUIDManager.get().setup();
 
         try {
-            DatabaseManager.get().setup(mi.getBoolean(mi.getConfig(), "UseMySQL", false));
+            DatabaseManager.get().setup();
         } catch (Exception ex) {
             log("Failed enabling database-manager...");
             debugException(ex);
@@ -96,7 +96,6 @@ public class Universal {
                 + "\n&8|   &cName: &7AdvancedBan&r"
                 + "\n&8|   &cDeveloper: &7Leoko&r"
                 + "\n&8|   &cVersion: &7" + mi.getVersion() + "&r"
-                + "\n&8|   &cStorage: &7" + (DatabaseManager.get().isUseMySQL() ? "MySQL (external)" : "HSQLDB (local)") + "&r"
                 + "\n&8| &cSupport:&r"
                 + "\n&8|   &cGithub: &7https://github.com/DevLeoko/AdvancedBan/issues &r"
                 + "\n&8|   &cDiscord: &7https://discord.gg/ycDG6rS &r"
@@ -122,7 +121,6 @@ public class Universal {
                 + "\n&8|   &cName: &7AdvancedBan"
                 + "\n&8|   &cDeveloper: &7Leoko"
                 + "\n&8|   &cVersion: &7" + getMethods().getVersion()
-                + "\n&8|   &cStorage: &7" + (DatabaseManager.get().isUseMySQL() ? "MySQL (external)" : "HSQLDB (local)")
                 + "\n&8| &cSupport:"
                 + "\n&8|   &cGithub: &7https://github.com/DevLeoko/AdvancedBan/issues"
                 + "\n&8|   &cDiscord: &7https://discord.gg/ycDG6rS"

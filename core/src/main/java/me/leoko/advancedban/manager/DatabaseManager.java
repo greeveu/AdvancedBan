@@ -15,19 +15,15 @@ import java.sql.SQLException;
 
 /**
  * The Database Manager is used to interact directly with the database is use.<br>
- * Will automatically direct the requests to either MySQL or HSQLDB.
+ * Will automatically direct the requests to MySQL.
  * <br><br>
  * Looking to request {@link me.leoko.advancedban.utils.Punishment Punishments} from the Database?
  * Use {@link PunishmentManager#getPunishments(SQLQuery, Object...)} or
  * {@link PunishmentManager#getPunishmentFromResultSet(ResultSet)} for already parsed data.
  */
 public class DatabaseManager {
-
     private HikariDataSource dataSource;
-    private boolean useMySQL;
-
     private RowSetFactory factory;
-
     private static DatabaseManager instance = null;
 
     /**
@@ -43,14 +39,10 @@ public class DatabaseManager {
 
     /**
      * Initially connects to the database and sets up the required tables of they don't already exist.
-     *
-     * @param useMySQLServer whether to preferably use MySQL (uses HSQLDB as fallback)
      */
-    public void setup(boolean useMySQLServer) {
-        useMySQL = useMySQLServer;
-
+    public void setup() {
         try {
-            dataSource = new DynamicDataSource(useMySQL).generateDataSource();
+            dataSource = new DynamicDataSource().generateDataSource();
         } catch (ClassNotFoundException ex) {
             Universal.get().log("§cERROR: Failed to configure data source!");
             Universal.get().debug(ex.getMessage());
@@ -61,21 +53,7 @@ public class DatabaseManager {
         executeStatement(SQLQuery.CREATE_TABLE_PUNISHMENT_HISTORY);
     }
 
-    /**
-     * Shuts down the HSQLDB if used.
-     */
     public void shutdown() {
-        if (!useMySQL) {
-            try (Connection connection = dataSource.getConnection();
-                 final PreparedStatement statement = connection.prepareStatement("SHUTDOWN")
-            ) {
-                statement.execute();
-            } catch (SQLException | NullPointerException exc) {
-                Universal.get().log("An unexpected error has occurred turning off the database");
-                Universal.get().debugException(exc);
-            }
-        }
-
         dataSource.close();
     }
 
@@ -150,14 +128,5 @@ public class DatabaseManager {
      */
     public boolean isConnectionValid() {
         return dataSource.isRunning();
-    }
-
-    /**
-     * Check whether MySQL is actually used.
-     *
-     * @return whether MySQL is used
-     */
-    public boolean isUseMySQL() {
-        return useMySQL;
     }
 }

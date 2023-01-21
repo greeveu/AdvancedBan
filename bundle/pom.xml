@@ -7,7 +7,7 @@
     <parent>
         <groupId>me.leoko.advancedban</groupId>
         <artifactId>AdvancedBan</artifactId>
-        <version>4.0.1</version>
+        <version>4.1.0</version>
     </parent>
 
     <artifactId>AdvancedBan-Bundle</artifactId>
@@ -19,6 +19,11 @@
             <artifactId>AdvancedBan-Bungee</artifactId>
             <version>${project.version}</version>
             <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.9.2</version>
         </dependency>
     </dependencies>
     
@@ -42,14 +47,23 @@
                     		<pattern>com.zaxxer.hikari</pattern>
                     		<shadedPattern>${project.groupId}.shaded.com.zaxxer.hikari</shadedPattern>
                     	</relocation>
-                    	<relocation>
-                    		<pattern>org.hsqldb</pattern>
-                    		<shadedPattern>${project.groupId}.shaded.org.hsqldb</shadedPattern>
-                    	</relocation>
                     </relocations>
                     <transformers>
                         <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                     </transformers>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/*.MF</exclude>
+                                <exclude>META-INF/LICENSE.md</exclude>
+                                <exclude>META-INF/LICENSE.txt</exclude>
+                                <exclude>META-INF/LICENSE-notice.md</exclude>
+                                <exclude>META-INF/NOTICE.txt</exclude>
+                                <exclude>META-INF/io.netty.versions.properties</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
                 </configuration>
                 <executions>
                     <execution>

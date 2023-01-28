@@ -96,13 +96,13 @@ public class Punishment {
 
     private void executePunishment(int currentWarningCount, boolean isPlayerOnline) {
         if (isPlayerOnline) {
-            final Object p = mi.getPlayer(getName());
-
             if (getType().getBasic() == PunishmentType.BAN || getType() == PunishmentType.KICK) {
                 mi.runSync(() -> mi.kickPlayer(getName(), getLayoutBSN()));
             } else {
-                if (getType().getBasic() != PunishmentType.NOTE) {
-                    mi.sendMessage(p, getLayout());
+                if (getType().getBasic() != PunishmentType.NOTE
+                    && mi.isOnlineOnThisServer(getName())
+                ) {
+                    mi.sendMessage(mi.getPlayer(getName()), getLayout());
                 }
                 PunishmentManager.get().getLoadedPunishments(false).add(this);
             }

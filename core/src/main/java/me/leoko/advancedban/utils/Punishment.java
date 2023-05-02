@@ -33,8 +33,7 @@ public class Punishment {
     private int id;
 
     public static void create(String name, String target, String reason, String operator, PunishmentType type, Long end, String calculation, boolean silent) {
-        new Punishment(name, target, reason, operator, end == -1 ? type.getPermanent() : type, TimeManager.getTime(), end, calculation, -1)
-            .create(silent);
+        new Punishment(name, target, reason, operator, end == -1 ? type.getPermanent() : type, TimeManager.getTime(), end, calculation, -1).create(silent);
     }
 
     public String getReason() {
@@ -99,12 +98,11 @@ public class Punishment {
             if (getType().getBasic() == PunishmentType.BAN || getType() == PunishmentType.KICK) {
                 mi.runSync(() -> mi.kickPlayer(getName(), getLayoutBSN()));
             } else {
-                if (getType().getBasic() != PunishmentType.NOTE
-                    && mi.isOnlineOnThisServer(getName())
-                ) {
+                if (getType().getBasic() != PunishmentType.NOTE && mi.isOnlineOnThisServer(getName())) {
                     mi.sendMessage(mi.getPlayer(getName()), getLayout());
                 }
                 PunishmentManager.get().getLoadedPunishments(false).add(this);
+                mi.refreshPlayerData(getUuid());
             }
         }
 
@@ -120,9 +118,7 @@ public class Punishment {
                 }
             }
             if (cmd != null) {
-                final String finalCmd = cmd.replace("%PLAYER%", getName())
-                    .replaceAll("%COUNT%", currentWarningCount + "")
-                    .replaceAll("%REASON%", getReason());
+                final String finalCmd = cmd.replace("%PLAYER%", getName()).replaceAll("%COUNT%", currentWarningCount + "").replaceAll("%REASON%", getReason());
                 mi.runSync(() -> {
                     mi.executeCommand(finalCmd);
                     Universal.get().log("Executing command: " + finalCmd);
@@ -140,17 +136,7 @@ public class Punishment {
     }
 
     private void announce(int currentWarningCount) {
-        String notification = MessageManager.getLayout(mi.getMessages(),
-            getType().getName() + ".Notification",
-            "OPERATOR", getOperator(),
-            "PREFIX", mi.getBoolean(mi.getConfig(), "Disable Prefix", false) ? "" : MessageManager.getMessage("General.Prefix"),
-            "DURATION", getDuration(true),
-            "REASON", getReason(),
-            "NAME", getName(),
-            "ID", String.valueOf(id),
-            "HEXID", getHexId(),
-            "DATE", getDate(start),
-            "COUNT", currentWarningCount + "");
+        String notification = MessageManager.getLayout(mi.getMessages(), getType().getName() + ".Notification", "OPERATOR", getOperator(), "PREFIX", mi.getBoolean(mi.getConfig(), "Disable Prefix", false) ? "" : MessageManager.getMessage("General.Prefix"), "DURATION", getDuration(true), "REASON", getReason(), "NAME", getName(), "ID", String.valueOf(id), "HEXID", getHexId(), "DATE", getDate(start), "COUNT", currentWarningCount + "");
 
         mi.notify("ab.notify." + getType().getName(), notification);
     }
@@ -178,8 +164,7 @@ public class Punishment {
         }
 
         if (who != null) {
-            String message = MessageManager.getMessage("Un" + getType().getBasic().getConfSection("Notification"),
-                true, "OPERATOR", who, "NAME", getName());
+            String message = MessageManager.getMessage("Un" + getType().getBasic().getConfSection("Notification"), true, "OPERATOR", who, "NAME", getName());
             mi.notify("ab.undoNotify." + getType().getBasic().getName(), message);
 
             Universal.get().debug(who + " is deleting a punishment");
@@ -192,17 +177,7 @@ public class Punishment {
     public String getLayout() {
         boolean isLayout = getReason().startsWith("@") || getReason().startsWith("~");
 
-        return MessageManager.getLayout(
-            isLayout ? mi.getLayouts() : mi.getMessages(),
-            isLayout ? "Message." + getReason().split(" ")[0].substring(1) : getType().getName() + ".Layout",
-            "OPERATOR", getOperator(),
-            "PREFIX", mi.getBoolean(mi.getConfig(), "Disable Prefix", false) ? "" : MessageManager.getMessage("General.Prefix"),
-            "DURATION", getDuration(false),
-            "REASON", isLayout ? (getReason().split(" ").length < 2 ? "" : getReason().substring(getReason().split(" ")[0].length() + 1)) : getReason(),
-            "HEXID", getHexId(),
-            "ID", String.valueOf(id),
-            "DATE", getDate(start),
-            "COUNT", getType().getBasic() == PunishmentType.WARNING ? (PunishmentManager.get().getCurrentWarns(getUuid()) + 1) + "" : "0");
+        return MessageManager.getLayout(isLayout ? mi.getLayouts() : mi.getMessages(), isLayout ? "Message." + getReason().split(" ")[0].substring(1) : getType().getName() + ".Layout", "OPERATOR", getOperator(), "PREFIX", mi.getBoolean(mi.getConfig(), "Disable Prefix", false) ? "" : MessageManager.getMessage("General.Prefix"), "DURATION", getDuration(false), "REASON", isLayout ? (getReason().split(" ").length < 2 ? "" : getReason().substring(getReason().split(" ")[0].length() + 1)) : getReason(), "HEXID", getHexId(), "ID", String.valueOf(id), "DATE", getDate(start), "COUNT", getType().getBasic() == PunishmentType.WARNING ? (PunishmentManager.get().getCurrentWarns(getUuid()) + 1) + "" : "0");
     }
 
     public String getDuration(boolean fromStart) {

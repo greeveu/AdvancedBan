@@ -196,6 +196,12 @@ public interface MethodInterface {
     void kickPlayer(String player, String reason);
 
     /**
+     * Refresh the data stored of the player if he is currently on the proxy.
+     * @param uuid UUID of the User which to refresh
+     */
+    void refreshPlayerData(String uuid);
+
+    /**
      * Get online players.
      *
      * @return the object [ ]

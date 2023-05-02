@@ -303,6 +303,17 @@ public class Universal {
         return pt.getLayoutBSN();
     }
 
+    public void refreshUserData(String name, String uuid, String ip) {
+        InterimData interimData = PunishmentManager.get().load(name, uuid, ip);
+
+        if (interimData == null) {
+            System.out.println("Unable to refresh data for player " + name);
+            return;
+        }
+
+        interimData.accept();
+    }
+
     /**
      * Has perms boolean.
      *

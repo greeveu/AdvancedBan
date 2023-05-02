@@ -50,8 +50,6 @@ public enum SQLQuery {
     SELECT_USER_PUNISHMENTS_HISTORY_BY_CALCULATION("SELECT * FROM `PunishmentHistory` WHERE `uuid` = ? AND `calculation` = ? ORDER BY `start` DESC"),
     UPDATE_PUNISHMENT_REASON("UPDATE `Punishments` SET `reason` = ? WHERE `id` = ?"),
     SELECT_PUNISHMENT_BY_ID("SELECT * FROM `Punishments` WHERE `id` = ?"),
-    SELECT_ALL_PUNISHMENTS("SELECT * FROM `Punishments`"),
-    SELECT_ALL_PUNISHMENTS_HISTORY("SELECT * FROM `PunishmentHistory`"),
     SELECT_ALL_PUNISHMENTS_LIMIT("SELECT * FROM `Punishments` ORDER BY `start` DESC LIMIT ?"),
     SELECT_ALL_PUNISHMENTS_HISTORY_LIMIT("SELECT * FROM `PunishmentHistory` ORDER BY `start` DESC LIMIT ?");
 

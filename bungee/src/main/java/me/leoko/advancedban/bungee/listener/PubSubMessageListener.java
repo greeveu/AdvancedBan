@@ -12,7 +12,9 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
 import java.util.HashMap;
+import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 
 /**
  * @author Beelzebu
@@ -47,6 +49,11 @@ public class PubSubMessageListener implements Listener {
                     if (msg[1].equalsIgnoreCase("CONSOLE")) {
                         ProxyServer.getInstance().getConsole().sendMessage(new ComponentBuilder(message.substring((msg[0] + msg[1]).length() + 2)).create());
                     }
+                } else if (message.startsWith("refresh ")) {
+                    ProxiedPlayer proxiedPlayer = ProxyServer.getInstance().getPlayer(UUID.fromString(msg[1]));
+                    if (proxiedPlayer != null) {
+                        Universal.get().refreshUserData(proxiedPlayer.getName(), proxiedPlayer.getUniqueId().toString(), proxiedPlayer.getPendingConnection().getAddress().getAddress().getHostAddress());
+                    }
                 }
                 break;
             }
@@ -69,6 +76,9 @@ public class PubSubMessageListener implements Listener {
                 }
                 break;
             }
+            default:
+                ProxyServer.getInstance().getLogger().log(Level.SEVERE, "Received message on unknown channel: {}", channel);
+                break;
         }
     }
 }

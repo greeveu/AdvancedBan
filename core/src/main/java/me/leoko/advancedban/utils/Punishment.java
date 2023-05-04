@@ -102,7 +102,7 @@ public class Punishment {
                     mi.sendMessage(mi.getPlayer(getName()), getLayout());
                 }
                 PunishmentManager.get().getLoadedPunishments(false).add(this);
-                mi.refreshPlayerData(getUuid());
+                mi.requestGlobalRefresh(getUuid());
             }
         }
 

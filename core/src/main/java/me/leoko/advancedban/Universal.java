@@ -303,6 +303,9 @@ public class Universal {
         return pt.getLayoutBSN();
     }
 
+    /**
+     * Refresh the data stored of the player if he is currently on the proxy.
+     */
     public void refreshUserData(String name, String uuid, String ip) {
         InterimData interimData = PunishmentManager.get().load(name, uuid, ip);
 

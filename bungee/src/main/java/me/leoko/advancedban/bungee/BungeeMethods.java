@@ -237,7 +237,7 @@ public class BungeeMethods implements MethodInterface {
     }
 
     @Override
-    public void refreshPlayerData(String uuid) {
+    public void requestGlobalRefresh(String uuid) {
         if (Universal.isRedis()) {
             Universal.get().getMethods().runAsync(() -> RedisBungee.getApi().sendChannelMessage("advancedban:main:v1", "refresh " + uuid));
         }

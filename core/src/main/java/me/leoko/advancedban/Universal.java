@@ -74,7 +74,7 @@ public class Universal {
             debugException(ex);
         }
 
-        PunishmentManager.get().setup();
+        PunishmentManager.get().cleanupOldPunishments();
 
         for (Command command : Command.values()) {
             for (String commandName : command.getNames()) {

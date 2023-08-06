@@ -9,6 +9,7 @@ import me.leoko.advancedban.utils.SQLQuery;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * The Punishment Manager handles the punishments. It loads and parses them from the database, caches them
@@ -18,7 +19,6 @@ public class PunishmentManager {
 
     private static PunishmentManager instance = null;
     private final Set<Punishment> punishments = Collections.synchronizedSet(new HashSet<>());
-    private final Set<Punishment> history = Collections.synchronizedSet(new HashSet<>());
     private final Set<String> cached = Collections.synchronizedSet(new HashSet<>());
 
     private Universal universal() {
@@ -39,13 +39,9 @@ public class PunishmentManager {
     /**
      * Initially clears out all expired punishments.
      */
-    public void setup() {
+    public void cleanupOldPunishments() {
         DatabaseManager.get().executeStatement(SQLQuery.DELETE_OLD_PUNISHMENTS, TimeManager.getTime());
-        // Seems useless as the Interim Data which get's loaded just is ignored
-//        for (Object player : mi.getOnlinePlayers()) {
-//            String name = mi.getName(player).toLowerCase();
-//            load(name, UUIDManager.get().getUUID(name), mi.getIP(player));
-//        }
+        DatabaseManager.get().executeStatement(SQLQuery.REMOVE_IPS_FROM_ARCHIVED_PUNISHMENTS);
     }
 
     /**
@@ -61,7 +57,6 @@ public class PunishmentManager {
      */
     public InterimData load(String name, String uuid, String ip) {
         Set<Punishment> resultPunishments = new HashSet<>();
-        Set<Punishment> resultHistory = new HashSet<>();
         try (ResultSet resultsPunishments = DatabaseManager.get().executeResultStatement(SQLQuery.SELECT_USER_PUNISHMENTS_WITH_IP, uuid, ip);
              ResultSet resultsHistory = DatabaseManager.get().executeResultStatement(SQLQuery.SELECT_USER_PUNISHMENTS_HISTORY_WITH_IP, uuid, ip)
         ) {
@@ -73,7 +68,7 @@ public class PunishmentManager {
                 resultPunishments.add(getPunishmentFromResultSet(resultsPunishments));
             }
             while (resultsHistory.next()) {
-                resultHistory.add(getPunishmentFromResultSet(resultsHistory));
+                resultPunishments.add(getPunishmentFromResultSet(resultsHistory));
             }
         } catch (SQLException ex) {
             Universal universal = universal();
@@ -82,7 +77,7 @@ public class PunishmentManager {
             return null;
         }
 
-        return new InterimData(uuid, name, ip, resultPunishments, resultHistory);
+        return new InterimData(uuid, name, ip, resultPunishments);
     }
 
     /**
@@ -98,26 +93,10 @@ public class PunishmentManager {
         cached.remove(uuid);
         cached.remove(ip);
 
-        Iterator<Punishment> iterator = punishments.iterator();
-        while (iterator.hasNext()) {
-            Punishment punishment = iterator.next();
-            if (punishment.getUuid().equals(uuid) || punishment.getUuid().equals(ip)) {
-                iterator.remove();
-            }
-        }
-
-        iterator = history.iterator();
-        while (iterator.hasNext()) {
-            Punishment punishment = iterator.next();
-            if (punishment.getUuid().equals(uuid) || punishment.getUuid().equals(ip)) {
-                iterator.remove();
-            }
-        }
+        punishments.removeIf(punishment -> punishment.getUuid().equals(uuid) || punishment.getIp().filter(s -> s.equals(ip)).isPresent());
     }
 
     /**
-     * Get all punishments which belong to the given uuid or ip.
-     *
      * @param target  the uuid or ip to search for
      * @param put     the basic punishment type to search for ({@link PunishmentType#BAN} would also include Tempbans).
      *                Use <code>null</code> to search for all punishments.
@@ -125,34 +104,35 @@ public class PunishmentManager {
      * @return the punishments
      */
     public List<Punishment> getPunishments(String target, PunishmentType put, boolean current) {
-        List<Punishment> ptList = new ArrayList<>();
-
         if (isCached(target)) {
-            for (Iterator<Punishment> iterator = (current ? punishments : history).iterator(); iterator.hasNext(); ) {
-                Punishment pt = iterator.next();
-                if ((put == null || put == pt.getType().getBasic()) && pt.getUuid().equals(target)) {
-                    if (!current || !pt.isExpired()) {
-                        ptList.add(pt);
-                    } else {
-                        pt.delete(null, false, false);
-                        iterator.remove();
-                    }
-                }
-            }
+            return getPunishmentsFromCache(target, put, current);
         } else {
-            try (ResultSet rs = DatabaseManager.get().executeResultStatement(current ? SQLQuery.SELECT_USER_PUNISHMENTS : SQLQuery.SELECT_USER_PUNISHMENTS_HISTORY, target)) {
-                while (rs.next()) {
-                    Punishment punishment = getPunishmentFromResultSet(rs);
-                    if ((put == null || put == punishment.getType().getBasic()) && (!current || !punishment.isExpired())) {
-                        ptList.add(punishment);
-                    }
-                }
-            } catch (SQLException ex) {
-                Universal universal = universal();
-                universal.log("An error has occurred getting the punishments for " + target);
-                universal.debugSqlException(ex);
-            }
+            return getPunishmentsFromDatabase(target, put, current);
         }
+    }
+
+    private List<Punishment> getPunishmentsFromCache(String target, PunishmentType put, boolean current) {
+        return (punishments).stream().filter(punishment -> current ? !punishment.isArchived() : true)
+            .filter(punishment -> (put == null || put == punishment.getType().getBasic()) && punishment.getUuid().equals(target))
+            .filter(punishment -> !current || !punishment.isExpired())
+            .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private List<Punishment> getPunishmentsFromDatabase(String target, PunishmentType put, boolean current) {
+        List<Punishment> ptList = new ArrayList<>();
+        try (ResultSet rs = DatabaseManager.get().executeResultStatement(current ? SQLQuery.SELECT_USER_PUNISHMENTS : SQLQuery.SELECT_USER_PUNISHMENTS_HISTORY, target)) {
+            while (rs.next()) {
+                Punishment punishment = getPunishmentFromResultSet(rs);
+                if ((put == null || put == punishment.getType().getBasic()) && (!current || !punishment.isExpired())) {
+                    ptList.add(punishment);
+                }
+            }
+        } catch (SQLException ex) {
+            Universal universal = universal();
+            universal.log("An error has occurred getting the punishments for " + target);
+            universal.debugSqlException(ex);
+        }
+
         return ptList;
     }
 
@@ -190,7 +170,7 @@ public class PunishmentManager {
      * @return the punishment
      */
     public Punishment getPunishment(int id) {
-        final Optional<Punishment> cachedPunishment = getLoadedPunishments(false).stream()
+        Optional<Punishment> cachedPunishment = getLoadedPunishments(false).stream()
             .filter(punishment -> punishment.getId() == id)
             .findAny();
 
@@ -340,7 +320,10 @@ public class PunishmentManager {
      */
     public int getCalculationLevel(String uuid, String layout) {
         if (isCached(uuid)) {
-            return (int) history.stream().filter(pt -> pt.getUuid().equals(uuid) && layout.equalsIgnoreCase(pt.getCalculation())).count();
+            return (int) punishments.stream()
+                .filter(punishment -> punishment.getUuid().equals(uuid))
+                .filter(punishment -> layout.equalsIgnoreCase(punishment.getCalculation()))
+                .count();
         }
 
         int i = 0;
@@ -408,21 +391,15 @@ public class PunishmentManager {
     public Punishment getPunishmentFromResultSet(ResultSet rs) throws SQLException {
         return new Punishment(
             rs.getString("name"),
-            rs.getString("uuid"), rs.getString("reason"),
+            rs.getString("uuid"),
+            Optional.ofNullable(rs.getString("ip")),
+            rs.getString("reason"),
             rs.getString("operator"),
             PunishmentType.valueOf(rs.getString("punishmentType")),
             rs.getLong("start"),
             rs.getLong("end"),
             rs.getString("calculation"),
-            rs.getInt("id"));
-    }
-
-    /**
-     * Get all cached history punishments.
-     *
-     * @return the loaded history
-     */
-    public Set<Punishment> getLoadedHistory() {
-        return history;
+            rs.getInt("id"),
+            rs.getBoolean("archived"));
     }
 }

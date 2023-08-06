@@ -17,7 +17,6 @@ public class InterimData {
     private final String name;
     private final String ip;
     private final Set<Punishment> punishments;
-    private final Set<Punishment> history;
 
     public Punishment getBan() {
         return punishments.stream()
@@ -33,7 +32,6 @@ public class InterimData {
 
     public void accept() {
         PunishmentManager.get().getLoadedPunishments(false).addAll(punishments);
-        PunishmentManager.get().getLoadedHistory().addAll(history);
         PunishmentManager.get().setCached(this);
     }
 }

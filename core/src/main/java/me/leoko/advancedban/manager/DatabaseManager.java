@@ -50,7 +50,6 @@ public class DatabaseManager {
         }
 
         executeStatement(SQLQuery.CREATE_TABLE_PUNISHMENT);
-        executeStatement(SQLQuery.CREATE_TABLE_PUNISHMENT_HISTORY);
     }
 
     public void shutdown() {

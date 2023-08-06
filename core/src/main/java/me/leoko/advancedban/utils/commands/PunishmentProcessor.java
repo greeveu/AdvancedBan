@@ -24,23 +24,30 @@ public class PunishmentProcessor implements Consumer<Command.CommandInput> {
     @Override
     public void accept(Command.CommandInput input) {
         boolean silent = processTag(input, "-s");
-        String name = input.getPrimary();
 
-        // extract target
-        String target = type.isIpOrientated() ? processIP(input) : processName(input);
-        if (target == null) {
-            return;
+        // If the command didn't contain a username we will have to just add a punishment with a placeholder uuid
+        String playerUuid;
+        String playerName;
+        if (isIP(input)) {
+            playerName = "Unknown";
+            playerUuid = "ffffffffffffffffffffffffffffffff";
+        } else {
+            playerName = input.getPrimary();
+            playerUuid = processName(input);
+            if (playerUuid == null) {
+                return;
+            }
         }
 
         // is exempted
-        processExempt(name, target, input.getSender(), type, exempted -> {
-            if (exempted) return;
+        processExempt(playerName, input.getSender(), type, exempted -> {
+            if (Boolean.TRUE.equals(exempted)) return;
 
             // calculate duration if necessary
             Long end = -1L;
             String timeTemplate = "";
             if (type.isTemp()) {
-                TimeCalculation calculation = processTime(input, target, type);
+                TimeCalculation calculation = processTime(input, playerUuid, type);
                 if (calculation == null) {
                     return;
                 }
@@ -61,16 +68,16 @@ public class PunishmentProcessor implements Consumer<Command.CommandInput> {
             }
 
             // check if punishment of this type is already active
-            if (alreadyPunished(target, type)) {
-                MessageManager.sendMessage(input.getSender(), type.getBasic().getName() + ".AlreadyDone", true, "NAME", name);
+            if (alreadyPunished(playerUuid, type)) {
+                MessageManager.sendMessage(input.getSender(), type.getBasic().getName() + ".AlreadyDone", true, "NAME", playerName);
                 return;
             }
 
-            MethodInterface mi = Universal.get().getMethods();
-            String operator = mi.getName(input.getSender());
-            Punishment.create(name, target, reason, operator, type, end, timeTemplate, silent);
+            MethodInterface methods = Universal.get().getMethods();
+            String operator = methods.getName(input.getSender());
+            Punishment.create(playerName, playerUuid, type.isIpOrientated() ? getIpFromCache(input) : null, reason, operator, type, end, timeTemplate, silent);
 
-            MessageManager.sendMessage(input.getSender(), type.getBasic().getName() + ".Done", true, "NAME", name);
+            MessageManager.sendMessage(input.getSender(), type.getBasic().getName() + ".Done", true, "NAME", playerName);
         });
     }
 
@@ -115,22 +122,22 @@ public class PunishmentProcessor implements Consumer<Command.CommandInput> {
     }
 
     // Checks whether target is exempted from punishment
-    private static void processExempt(String name, String target, Object sender, PunishmentType type, Consumer<Boolean> callback) {
-        MethodInterface mi = Universal.get().getMethods();
+    private static void processExempt(String name, Object sender, PunishmentType type, Consumer<Boolean> callback) {
+        MethodInterface methods = Universal.get().getMethods();
         String dataName = name.toLowerCase();
 
         boolean exempt;
-        if (mi.isOnlineOnThisServer(dataName)) {
-            Object onlineTarget = mi.getPlayer(dataName);
+        if (methods.isOnlineOnThisServer(dataName)) {
+            Object onlineTarget = methods.getPlayer(dataName);
             exempt = canNotPunish(
-                perms -> mi.hasPerms(sender, perms),
-                perms -> mi.hasPerms(onlineTarget, perms),
+                perms -> methods.hasPerms(sender, perms),
+                perms -> methods.hasPerms(onlineTarget, perms),
                 type.getName()
             );
         } else {
-            final Permissionable offlinePermissionPlayer = mi.getOfflinePermissionPlayer(name);
+            final Permissionable offlinePermissionPlayer = methods.getOfflinePermissionPlayer(name);
             exempt = Universal.get().isExemptPlayer(dataName)
-                || canNotPunish(perms -> mi.hasPerms(sender, perms), offlinePermissionPlayer::hasPermission, type.getName());
+                || canNotPunish(perms -> methods.hasPerms(sender, perms), offlinePermissionPlayer::hasPermission, type.getName());
         }
 
         if (exempt) {

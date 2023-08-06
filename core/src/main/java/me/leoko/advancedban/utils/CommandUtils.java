@@ -45,13 +45,9 @@ public class CommandUtils {
         return uuid;
     }
 
-    // Removes name/ip argument and returns ip (null if failed)
-    public static String processIP(Command.CommandInput input) {
+    public static String getIpFromCache(Command.CommandInput input) {
         String name = input.getPrimaryData();
         input.next();
-        if (name.matches("^(?:\\d{1,3}\\.){3}\\d{1,3}$")) {
-            return name;
-        }
 
         String ip = Universal.get().getIps().get(name);
         if (ip == null) {
@@ -59,6 +55,11 @@ public class CommandUtils {
         }
 
         return ip;
+    }
+
+    public static boolean isIP(Command.CommandInput input) {
+        String inputData = input.getPrimaryData();
+        return inputData.matches("^(?:\\d{1,3}\\.){3}\\d{1,3}$");
     }
 
     // Builds reason from remaining arguments (null if failed)

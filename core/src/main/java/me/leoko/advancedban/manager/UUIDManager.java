@@ -1,5 +1,6 @@
 package me.leoko.advancedban.manager;
 
+import lombok.Getter;
 import me.leoko.advancedban.MethodInterface;
 import me.leoko.advancedban.Universal;
 
@@ -7,18 +8,23 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.*;
-import java.util.Map.Entry;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * The UUID Manager used to resolve and cache the UUIDs.
  */
+@Getter
 public class UUIDManager {
     private static UUIDManager instance = null;
-    private FetcherMode mode;
+
     private final Map<String, String> activeUUIDs = new HashMap<>();
 
-    private MethodInterface mi() {
+    private FetcherMode mode;
+
+    private MethodInterface getUniversalMethods() {
         return Universal.get().getMethods();
     }
 
@@ -38,7 +44,7 @@ public class UUIDManager {
      * based on the configured preference and the servers capabilities.
      */
     public void setup() {
-        MethodInterface mi = mi();
+        MethodInterface mi = getUniversalMethods();
         if (mi.getBoolean(mi.getConfig(), "UUID-Fetcher.Dynamic", true)) {
             if (!mi.isOnlineMode()) {
                 mode = FetcherMode.DISABLED;
@@ -68,7 +74,7 @@ public class UUIDManager {
      * @return the uuid
      */
     public String getInitialUUID(String name) {
-        MethodInterface mi = mi();
+        MethodInterface mi = getUniversalMethods();
         name = name.toLowerCase();
         if (mode == FetcherMode.DISABLED) {
             return name;
@@ -85,24 +91,24 @@ public class UUIDManager {
         try {
             uuid = askAPI(mi.getString(mi.getConfig(), "UUID-Fetcher.REST-API.URL"), name, mi.getString(mi.getConfig(), "UUID-Fetcher.REST-API.Key"));
         } catch (IOException e) {
-            System.out.println("Error -> " + e.getMessage());
-            System.out.println("!! Failed fetching UUID of " + name);
-            System.out.println("!! Could not connect to REST-API under " + mi.getString(mi.getConfig(), "UUID-Fetcher.REST-API.URL"));
+            Universal.get().log("Error -> " + e.getMessage());
+            Universal.get().log("!! Failed fetching UUID of " + name);
+            Universal.get().log("!! Could not connect to REST-API under " + mi.getString(mi.getConfig(), "UUID-Fetcher.REST-API.URL"));
         }
 
         if (uuid == null) {
-            System.out.println("Trying to fetch UUID form BackUp-API...");
+            Universal.get().log("Trying to fetch UUID form BackUp-API...");
             try {
                 uuid = askAPI(mi.getString(mi.getConfig(), "UUID-Fetcher.BackUp-API.URL"), name, mi.getString(mi.getConfig(), "UUID-Fetcher.BackUp-API.Key"));
             } catch (IOException e) {
-                System.out.println("!! Failed fetching UUID of " + name);
-                System.out.println("!! Could not connect to REST-API under " + mi.getString(mi.getConfig(), "UUID-Fetcher.BackUp-API.URL"));
+                Universal.get().log("!! Failed fetching UUID of " + name);
+                Universal.get().log("!! Could not connect to REST-API under " + mi.getString(mi.getConfig(), "UUID-Fetcher.BackUp-API.URL"));
             }
         }
 
         if (uuid == null) {
-            System.out.println("!! !! Warning we have not been able to fetch the UUID of the Player " + name);
-            System.out.println("!! Make sure that the name is spelled correctly and if it is change your UUID-Fetcher settings!");
+            Universal.get().log("!! !! Warning we have not been able to fetch the UUID of the Player " + name);
+            Universal.get().log("!! Make sure that the name is spelled correctly and if it is change your UUID-Fetcher settings!");
         }
 
         return uuid;
@@ -159,62 +165,8 @@ public class UUIDManager {
         return activeUUIDs.get(name.toLowerCase());
     }
 
-    /**
-     * Gets a name from a uuid only if AdvancedBan
-     * already has the uuid/name mapping in memory.
-     *
-     * @param uuid the uuid without hyphens
-     * @return the player name or null if not found
-     */
-    public String getInMemoryName(String uuid) {
-        for (Entry<String, String> rs : activeUUIDs.entrySet()) {
-            if (rs.getValue().equalsIgnoreCase(uuid)) {
-                return rs.getKey();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Get name from an uuid.
-     *
-     * @param uuid         the uuid
-     * @param forceInitial whether to bypass the cache
-     * @return the name from uuid
-     */
-    public String getNameFromUUID(String uuid, boolean forceInitial) {
-        MethodInterface mi = mi();
-        if (mode == FetcherMode.DISABLED) {
-            return uuid;
-        }
-
-        if (mode == FetcherMode.INTERN || mode == FetcherMode.MIXED) {
-            String internName = mi.getName(uuid);
-            if (mode == FetcherMode.INTERN || internName != null) {
-                return internName;
-            }
-        }
-
-        if (!forceInitial) {
-            String inMemoryName = getInMemoryName(uuid);
-            if (inMemoryName != null) {
-                return inMemoryName;
-            }
-        }
-
-        //FIXME wtf - oh and also this api is no longer available:
-        // This endpoint has been deprecated by Mojang and was removed on 13 September 2022 at 9:25 AM CET to "improve player safety and data privacy". My ass.
-        try (Scanner scanner = new Scanner(new URL("https://api.mojang.com/user/profiles/" + uuid + "/names").openStream(), "UTF-8")) {
-            String s = scanner.useDelimiter("\\A").next();
-            s = s.substring(s.lastIndexOf('{'), s.lastIndexOf('}') + 1);
-            return mi.parseJSON(s, "name");
-        } catch (Exception exc) {
-            return null;
-        }
-    }
-
     private String askAPI(String url, String name, String key) throws IOException {
-        MethodInterface mi = mi();
+        MethodInterface mi = getUniversalMethods();
         name = name.toLowerCase();
         HttpURLConnection request = (HttpURLConnection) new URL(url.replace("%NAME%", name).replace("%TIMESTAMP%", new Date().getTime() + "")).openConnection();
         request.connect();
@@ -222,22 +174,13 @@ public class UUIDManager {
         String uuid = mi.parseJSON(new InputStreamReader(request.getInputStream()), key);
 
         if (uuid == null) {
-            System.out.println("!! Failed fetching UUID of " + name);
-            System.out.println("!! Could not find key '" + key + "' in the servers response");
-            System.out.println("!! Response: " + request.getResponseMessage());
+            Universal.get().log("!! Failed fetching UUID of " + name);
+            Universal.get().log("!! Could not find key '" + key + "' in the servers response");
+            Universal.get().log("!! Response: " + request.getResponseMessage());
         } else {
             activeUUIDs.put(name, uuid);
         }
         return uuid;
-    }
-
-    /**
-     * Get the {@link FetcherMode} which is used.
-     *
-     * @return the mode
-     */
-    public FetcherMode getMode() {
-        return mode;
     }
 
     /**

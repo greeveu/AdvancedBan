@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Optional;
 
 /**
  * Created by Leoko @ dev.skamps.eu on 30.05.2016.
@@ -21,9 +22,10 @@ import java.util.Date;
 @Getter
 public class Punishment {
 
-    private static final MethodInterface mi = Universal.get().getMethods();
+    private static final MethodInterface UNIVERSAL_METHODS = Universal.get().getMethods();
     private final String name;
     private final String uuid;
+    private final Optional<String> ip;
     private String reason;
     private final String operator;
     private final PunishmentType type;
@@ -31,13 +33,14 @@ public class Punishment {
     private final long end;
     private final String calculation;
     private int id;
+    private boolean archived;
 
-    public static void create(String name, String target, String reason, String operator, PunishmentType type, Long end, String calculation, boolean silent) {
-        new Punishment(name, target, reason, operator, end == -1 ? type.getPermanent() : type, TimeManager.getTime(), end, calculation, -1).create(silent);
+    public static void create(String name, String uuid, String ip, String reason, String operator, PunishmentType type, Long end, String calculation, boolean silent) {
+        new Punishment(name, uuid, Optional.ofNullable(ip), reason, operator, end == -1 ? type.getPermanent() : type, TimeManager.getTime(), end, calculation, -1, false).create(silent);
     }
 
     public String getReason() {
-        return (reason == null ? mi.getString(mi.getConfig(), "DefaultReason", "none") : reason).replace("'", "");
+        return (reason == null ? UNIVERSAL_METHODS.getString(UNIVERSAL_METHODS.getConfig(), "DefaultReason", "none") : reason).replace("'", "");
     }
 
     public String getHexId() {
@@ -45,7 +48,7 @@ public class Punishment {
     }
 
     public String getDate(long date) {
-        SimpleDateFormat format = new SimpleDateFormat(mi.getString(mi.getConfig(), "DateFormat", "dd.MM.yyyy-HH:mm"));
+        SimpleDateFormat format = new SimpleDateFormat(UNIVERSAL_METHODS.getString(UNIVERSAL_METHODS.getConfig(), "DateFormat", "dd.MM.yyyy-HH:mm"));
         return format.format(new Date(date));
     }
 
@@ -66,61 +69,59 @@ public class Punishment {
             return;
         }
 
-        final int currentWarningCount = getType().getBasic() == PunishmentType.WARNING ? (PunishmentManager.get().getCurrentWarns(getUuid()) + 1) : 0;
+        int currentWarningCount = getType().getBasic() == PunishmentType.WARNING ? (PunishmentManager.get().getCurrentWarns(getUuid()) + 1) : 0;
 
-        DatabaseManager.get().executeStatement(SQLQuery.INSERT_PUNISHMENT_HISTORY, getName(), getUuid(), getReason(), getOperator(), getType().name(), getStart(), getEnd(), getCalculation());
-
-        if (getType() != PunishmentType.KICK) {
-            try {
-                DatabaseManager.get().executeStatement(SQLQuery.INSERT_PUNISHMENT, getName(), getUuid(), getReason(), getOperator(), getType().name(), getStart(), getEnd(), getCalculation());
-                try (ResultSet rs = DatabaseManager.get().executeResultStatement(SQLQuery.SELECT_EXACT_PUNISHMENT, getUuid(), getStart(), getType().name())) {
-                    if (rs.next()) {
-                        id = rs.getInt("id");
-                    } else {
-                        Universal.get().log("!! Not able to update ID of punishment! Please restart the server to resolve this issue!");
-                        Universal.get().log("!! Failed at: " + this);
-                    }
+        try {
+            DatabaseManager.get().executeStatement(SQLQuery.INSERT_PUNISHMENT, getName(), getUuid(), getIp().orElse(null), getReason(), getOperator(), getType().name(), getStart(), getEnd(), getCalculation());
+            try (ResultSet rs = DatabaseManager.get().executeResultStatement(SQLQuery.SELECT_EXACT_PUNISHMENT, getUuid(), getStart(), getType().name())) {
+                if (rs.next()) {
+                    id = rs.getInt("id");
+                } else {
+                    Universal.get().log("!! Not able to update ID of punishment! Please restart the server to resolve this issue!");
+                    Universal.get().log("!! Failed at: " + this);
                 }
-            } catch (SQLException ex) {
-                Universal.get().debugSqlException(ex);
             }
+        } catch (SQLException ex) {
+            Universal.get().debugSqlException(ex);
         }
 
         if (!silent) {
             announce(currentWarningCount);
         }
 
-        mi.isOnline(getName(), isPlayerOnline -> executePunishment(currentWarningCount, isPlayerOnline));
+        UNIVERSAL_METHODS.isOnline(getName(), isPlayerOnline -> executePunishment(currentWarningCount, isPlayerOnline));
     }
 
     private void executePunishment(int currentWarningCount, boolean isPlayerOnline) {
         if (isPlayerOnline) {
             if (getType().getBasic() == PunishmentType.BAN || getType() == PunishmentType.KICK) {
-                mi.runSync(() -> mi.kickPlayer(getName(), getLayoutBSN()));
+                UNIVERSAL_METHODS.runSync(() -> UNIVERSAL_METHODS.kickPlayer(getName(), getLayoutBSN()));
             } else {
-                if (getType().getBasic() != PunishmentType.NOTE && mi.isOnlineOnThisServer(getName())) {
-                    mi.sendMessage(mi.getPlayer(getName()), getLayout());
+                if (getType().getBasic() != PunishmentType.NOTE && UNIVERSAL_METHODS.isOnlineOnThisServer(getName())) {
+                    UNIVERSAL_METHODS.sendMessage(UNIVERSAL_METHODS.getPlayer(getName()), getLayout());
                 }
-                PunishmentManager.get().getLoadedPunishments(false).add(this);
-                mi.requestGlobalRefresh(getUuid());
+                UNIVERSAL_METHODS.requestGlobalRefresh(getUuid());
             }
         }
 
-        PunishmentManager.get().getLoadedHistory().add(this);
+        PunishmentManager.get().getLoadedPunishments(false).add(this);
 
-        mi.callPunishmentEvent(this);
+        UNIVERSAL_METHODS.callPunishmentEvent(this);
 
         if (getType().getBasic() == PunishmentType.WARNING) {
             String cmd = null;
             for (int i = 1; i <= currentWarningCount; i++) {
-                if (mi.contains(mi.getConfig(), "WarnActions." + i)) {
-                    cmd = mi.getString(mi.getConfig(), "WarnActions." + i);
+                if (UNIVERSAL_METHODS.contains(UNIVERSAL_METHODS.getConfig(), "WarnActions." + i)) {
+                    cmd = UNIVERSAL_METHODS.getString(UNIVERSAL_METHODS.getConfig(), "WarnActions." + i);
                 }
             }
             if (cmd != null) {
-                final String finalCmd = cmd.replace("%PLAYER%", getName()).replaceAll("%COUNT%", currentWarningCount + "").replaceAll("%REASON%", getReason());
-                mi.runSync(() -> {
-                    mi.executeCommand(finalCmd);
+                String finalCmd = cmd
+                    .replace("%PLAYER%", getName())
+                    .replaceAll("%COUNT%", currentWarningCount + "")
+                    .replaceAll("%REASON%", getReason());
+                UNIVERSAL_METHODS.runSync(() -> {
+                    UNIVERSAL_METHODS.executeCommand(finalCmd);
                     Universal.get().log("Executing command: " + finalCmd);
                 });
             }
@@ -136,9 +137,9 @@ public class Punishment {
     }
 
     private void announce(int currentWarningCount) {
-        String notification = MessageManager.getLayout(mi.getMessages(), getType().getName() + ".Notification", "OPERATOR", getOperator(), "PREFIX", mi.getBoolean(mi.getConfig(), "Disable Prefix", false) ? "" : MessageManager.getMessage("General.Prefix"), "DURATION", getDuration(true), "REASON", getReason(), "NAME", getName(), "ID", String.valueOf(id), "HEXID", getHexId(), "DATE", getDate(start), "COUNT", currentWarningCount + "");
+        String notification = MessageManager.getLayout(UNIVERSAL_METHODS.getMessages(), getType().getName() + ".Notification", "OPERATOR", getOperator(), "PREFIX", UNIVERSAL_METHODS.getBoolean(UNIVERSAL_METHODS.getConfig(), "Disable Prefix", false) ? "" : MessageManager.getMessage("General.Prefix"), "DURATION", getDuration(true), "REASON", getReason(), "NAME", getName(), "ID", String.valueOf(id), "HEXID", getHexId(), "DATE", getDate(start), "COUNT", currentWarningCount + "");
 
-        mi.notify("ab.notify." + getType().getName(), notification);
+        UNIVERSAL_METHODS.notify("ab.notify." + getType().getName(), notification);
     }
 
     public void delete() {
@@ -147,7 +148,6 @@ public class Punishment {
 
     public void delete(String who, boolean massClear, boolean removeCache) {
         if (getType() == PunishmentType.KICK) {
-            Universal.get().log("!! Failed deleting! You are not able to delete Kicks!");
             return;
         }
 
@@ -165,19 +165,19 @@ public class Punishment {
 
         if (who != null) {
             String message = MessageManager.getMessage("Un" + getType().getBasic().getConfSection("Notification"), true, "OPERATOR", who, "NAME", getName());
-            mi.notify("ab.undoNotify." + getType().getBasic().getName(), message);
+            UNIVERSAL_METHODS.notify("ab.undoNotify." + getType().getBasic().getName(), message);
 
             Universal.get().debug(who + " is deleting a punishment");
         }
 
         Universal.get().debug("Deleted punishment " + getId() + " from " + getName() + " punishment reason: " + getReason());
-        mi.callRevokePunishmentEvent(this, massClear);
+        UNIVERSAL_METHODS.callRevokePunishmentEvent(this, massClear);
     }
 
     public String getLayout() {
         boolean isLayout = getReason().startsWith("@") || getReason().startsWith("~");
 
-        return MessageManager.getLayout(isLayout ? mi.getLayouts() : mi.getMessages(), isLayout ? "Message." + getReason().split(" ")[0].substring(1) : getType().getName() + ".Layout", "OPERATOR", getOperator(), "PREFIX", mi.getBoolean(mi.getConfig(), "Disable Prefix", false) ? "" : MessageManager.getMessage("General.Prefix"), "DURATION", getDuration(false), "REASON", isLayout ? (getReason().split(" ").length < 2 ? "" : getReason().substring(getReason().split(" ")[0].length() + 1)) : getReason(), "HEXID", getHexId(), "ID", String.valueOf(id), "DATE", getDate(start), "COUNT", getType().getBasic() == PunishmentType.WARNING ? (PunishmentManager.get().getCurrentWarns(getUuid()) + 1) + "" : "0");
+        return MessageManager.getLayout(isLayout ? UNIVERSAL_METHODS.getLayouts() : UNIVERSAL_METHODS.getMessages(), isLayout ? "Message." + getReason().split(" ")[0].substring(1) : getType().getName() + ".Layout", "OPERATOR", getOperator(), "PREFIX", UNIVERSAL_METHODS.getBoolean(UNIVERSAL_METHODS.getConfig(), "Disable Prefix", false) ? "" : MessageManager.getMessage("General.Prefix"), "DURATION", getDuration(false), "REASON", isLayout ? (getReason().split(" ").length < 2 ? "" : getReason().substring(getReason().split(" ")[0].length() + 1)) : getReason(), "HEXID", getHexId(), "ID", String.valueOf(id), "DATE", getDate(start), "COUNT", getType().getBasic() == PunishmentType.WARNING ? (PunishmentManager.get().getCurrentWarns(getUuid()) + 1) + "" : "0");
     }
 
     public String getDuration(boolean fromStart) {

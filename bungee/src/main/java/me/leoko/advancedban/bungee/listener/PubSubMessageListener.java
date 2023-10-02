@@ -50,7 +50,7 @@ public class PubSubMessageListener implements Listener {
                         ProxyServer.getInstance().getConsole().sendMessage(new ComponentBuilder(message.substring((msg[0] + msg[1]).length() + 2)).create());
                     }
                 } else if (message.startsWith("refresh ")) {
-                    ProxiedPlayer proxiedPlayer = ProxyServer.getInstance().getPlayer(UUID.fromString(msg[1]));
+                    ProxiedPlayer proxiedPlayer = ProxyServer.getInstance().getPlayer(UUID.fromString(addUUIDDashes(msg[1])));
                     if (proxiedPlayer != null) {
                         Universal.get().refreshUserData(proxiedPlayer.getName(), proxiedPlayer.getUniqueId().toString(), proxiedPlayer.getPendingConnection().getAddress().getAddress().getHostAddress());
                     }
@@ -77,8 +77,17 @@ public class PubSubMessageListener implements Listener {
                 break;
             }
             default:
-                ProxyServer.getInstance().getLogger().log(Level.SEVERE, "Received message on unknown channel: {}", channel);
+                ProxyServer.getInstance().getLogger().log(Level.FINE, "Received message on unknown channel: {0}", channel);
                 break;
         }
+    }
+
+    private String addUUIDDashes(String idNoDashes) {
+        StringBuffer idBuff = new StringBuffer(idNoDashes);
+        idBuff.insert(20, '-');
+        idBuff.insert(16, '-');
+        idBuff.insert(12, '-');
+        idBuff.insert(8, '-');
+        return idBuff.toString();
     }
 }

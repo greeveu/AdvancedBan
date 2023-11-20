@@ -28,6 +28,9 @@ public class PubSubMessageListener implements Listener {
     @EventHandler
     public void onMessageReceive(PubSubMessageEvent event) {
         String channel = event.getChannel();
+        if (!channel.startsWith("advancedban:")) {
+            return;
+        }
         String message = event.getMessage();
         switch (channel) {
             case "advancedban:main:v1": {

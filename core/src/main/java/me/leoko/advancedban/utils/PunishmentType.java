@@ -17,7 +17,8 @@ public enum PunishmentType {
     WARNING("Warn", null, false, "ab.warn.perma"),
     TEMP_WARNING("Tempwarn", WARNING, true, "ab.warn.temp"),
     KICK("Kick", null, false, "ab.kick.use"),
-    NOTE("Note", null, false, "ab.note.use");
+    NOTE("Note", null, false, "ab.note.use"),
+    REVOKE_NOTE("Revokenote", null, false, "ab.note.use"); // This is a special case, as it's not a punishment type, but a command and it *should* be a basic note, but the way the plugin is made that's not possible
 
     @Getter
     private final String name;
@@ -48,6 +49,8 @@ public enum PunishmentType {
                 return WARNING;
             case "note":
                 return NOTE;
+            case "revokenote":
+                return REVOKE_NOTE;
             case "tempwarn":
                 return TEMP_WARNING;
             case "kick":
@@ -68,6 +71,10 @@ public enum PunishmentType {
     public PunishmentType getPermanent() {
         if (this == IP_BAN || this == TEMP_IP_BAN) {
             return IP_BAN;
+        }
+
+        if (this == REVOKE_NOTE) {
+            return REVOKE_NOTE;
         }
 
         return getBasic();

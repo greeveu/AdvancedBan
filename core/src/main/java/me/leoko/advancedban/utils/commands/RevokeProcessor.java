@@ -33,8 +33,6 @@ public class RevokeProcessor implements Consumer<Command.CommandInput> {
             return;
         }
 
-        input.next();
-
         Punishment punishment = getPunishment(target, type);
         if (punishment == null) {
             MessageManager.sendMessage(input.getSender(), "Un" + type.getName() + ".NotPunished", true, "NAME", name);

@@ -28,6 +28,13 @@ public class RevokeProcessor implements Consumer<Command.CommandInput> {
             }
         }
 
+        if (!input.hasNext()) {
+            MessageManager.sendMessage(input.getSender(), "Un" + type.getName() + ".Usage", true);
+            return;
+        }
+
+        input.next();
+
         Punishment punishment = getPunishment(target, type);
         if (punishment == null) {
             MessageManager.sendMessage(input.getSender(), "Un" + type.getName() + ".NotPunished", true, "NAME", name);
@@ -36,6 +43,7 @@ public class RevokeProcessor implements Consumer<Command.CommandInput> {
 
         final String operator = Universal.get().getMethods().getName(input.getSender());
         punishment.delete(operator, false, true);
+        Punishment.create(punishment.getName(), punishment.getUuid(), String.join(" ", input.getArgs()), operator, PunishmentType.REVOKE_NOTE, -1L, "", true);
         MessageManager.sendMessage(input.getSender(), "Un" + type.getName() + ".Done", true, "NAME", name);
     }
 }

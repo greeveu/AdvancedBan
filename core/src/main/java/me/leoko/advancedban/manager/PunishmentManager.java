@@ -267,6 +267,16 @@ public class PunishmentManager {
     }
 
     /**
+     * Get a players active revoke note.
+     *
+     * @param uuid the players uuid
+     * @return the revoke notes
+     */
+    public List<Punishment> getRevokeNotes(String uuid) {
+        return getPunishments(uuid, PunishmentType.REVOKE_NOTE, true);
+    }
+
+    /**
      * Get a players active ban.
      *
      * @param uuid the players uuid (can also be an IP)
@@ -374,6 +384,16 @@ public class PunishmentManager {
      * @return the current note count
      */
     public int getCurrentNotes(String uuid) {
+        return getNotes(uuid).size();
+    }
+
+    /**
+     * Get how many revoke notes a player has.
+     *
+     * @param uuid the players uuid
+     * @return the current revoke note count
+     */
+    public int getCurrentRevokeNotes(String uuid) {
         return getNotes(uuid).size();
     }
 

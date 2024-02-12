@@ -117,14 +117,14 @@ public enum Command {
         "kick"),
 
     UN_BAN("ab." + PunishmentType.BAN.getName() + ".undo",
-        "\\S+",
+        ".+",
         new BasicTabCompleter("[Name/IP]"),
         new RevokeProcessor(PunishmentType.BAN),
         "Un" + PunishmentType.BAN.getConfSection("Usage"),
         "unban"),
 
     UN_MUTE("ab." + PunishmentType.MUTE.getName() + ".undo",
-        "\\S+",
+        ".+",
         new BasicTabCompleter(CleanTabCompleter.PLAYER_PLACEHOLDER, "[Name]"),
         new RevokeProcessor(PunishmentType.MUTE),
         "Un" + PunishmentType.MUTE.getConfSection("Usage"),
@@ -210,7 +210,7 @@ public enum Command {
         "unnote"),
 
     UN_PUNISH("ab.all.undo",
-        "[0-9]+",
+        "[0-9]+ .+",
         new BasicTabCompleter("<ID>"),
         new RevokeByIdProcessor("UnPunish", PunishmentManager.get()::getPunishment),
         "UnPunish.Usage",
@@ -436,6 +436,46 @@ public enum Command {
         "Notes.Usage",
         "notes"),
 
+    REVOKENOTES(null,
+        "\\S+( [1-9][0-9]*)?|\\S+|",
+        new CleanTabCompleter((user, args) -> {
+            if (args.length == 1) {
+                if (Universal.get().getMethods().hasPerms(user, "ab.revokenotes.other")) {
+                    return list(CleanTabCompleter.PLAYER_PLACEHOLDER, "<Name>", "<Page>");
+                } else {
+                    return list("<Page>");
+                }
+            } else if (args.length == 2 && !args[0].matches("\\d+")) {
+                return list("<Page>");
+            } else {
+                return list();
+            }
+        }),
+        input -> {
+            if (input.hasNext() && !input.getPrimary().matches("[1-9]\\d*")) {
+                if (!Universal.get().hasPerms(input.getSender(), "ab.revokenotes.other")) {
+                    MessageManager.sendMessage(input.getSender(), "General.NoPerms", true);
+                    return;
+                }
+
+                new ListProcessor(
+                    target -> PunishmentManager.get().getPunishments(target, PunishmentType.REVOKE_NOTE, true),
+                    "RevokeNotes", false, true).accept(input);
+            } else {
+                if (!Universal.get().hasPerms(input.getSender(), "ab.revokenotes.own")) {
+                    MessageManager.sendMessage(input.getSender(), "General.NoPerms", true);
+                    return;
+                }
+
+                String name = Universal.get().getMethods().getName(input.getSender());
+                String identifier = processName(new Command.CommandInput(input.getSender(), new String[]{name}));
+                new ListProcessor(
+                    target -> PunishmentManager.get().getPunishments(identifier, PunishmentType.REVOKE_NOTE, true),
+                    "RevokeNotesOwn", false, false).accept(input);
+            }
+        },
+        "RevokeNotes.Usage",
+        "revokenotes"),
     CHECK("ab.check",
         "\\S+",
         new BasicTabCompleter(CleanTabCompleter.PLAYER_PLACEHOLDER, "[Name]"),
@@ -476,6 +516,8 @@ public enum Command {
             MessageManager.sendMessage(sender, "Check.Warn", false, "COUNT", PunishmentManager.get().getCurrentWarns(uuid) + "");
 
             MessageManager.sendMessage(sender, "Check.Note", false, "COUNT", PunishmentManager.get().getCurrentNotes(uuid) + "");
+
+            MessageManager.sendMessage(sender, "Check.RevokeNote", false, "COUNT", PunishmentManager.get().getCurrentRevokeNotes(uuid) + "");
         },
         "Check.Usage",
         "check"),

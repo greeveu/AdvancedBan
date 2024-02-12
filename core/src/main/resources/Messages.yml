@@ -154,19 +154,19 @@ Kick:
 
 
 UnBan:
-  Usage: "&cUsage &8» &7&o/unban [Name/IP]"
+  Usage: "&cUsage &8» &7&o/unban [Name/IP] [Reason]"
   NotPunished: "&c&o%NAME% is not banned!"
   Done: "&a&o%NAME% &7was successfully unbanned!"
   Notification: "&e&o%OPERATOR% &7unbanned &c&o%NAME%"
 
 UnMute:
-  Usage: "&cUsage &8» &7&o/unmute [Name]"
+  Usage: "&cUsage &8» &7&o/unmute [Name] [Reason]"
   NotPunished: "&c&o%NAME% is not muted!"
   Done: "&a&o%NAME% &7was successfully unmuted!"
   Notification: "&e&o%OPERATOR% &7unmuted &c&o%NAME%"
 
 UnWarn:
-  Usage: "&cUsage &8» &7&o/unwarn [ID] or /unwarn clear [Name]"
+  Usage: "&cUsage &8» &7&o/unwarn [ID] [Reason] or /unwarn clear [Name]"
   NotFound: "&cCould not find warning #%ID%"
   Done: "&7Warn &a&o#%ID% &7was successfully deleted!"
   Notification: "&e&o%OPERATOR% &7unwarned &c&o%NAME%"
@@ -175,7 +175,7 @@ UnWarn:
     Done: "&7Cleared &a&o%COUNT% &7warnings"
 
 UnNote:
-  Usage: "&cUsage &8» &7&o/unnote [ID] or /unnote clear [Name]"
+  Usage: "&cUsage &8» &7&o/unnote [ID] [Reason] or /unnote clear [Name]"
   NotFound: "&cCould not find note #%ID%"
   Done: "&7Note &a&o#%ID% &7was successfully deleted!"
   Notification: "&e&o%OPERATOR% &7unnoted &c&o%NAME%"
@@ -184,7 +184,7 @@ UnNote:
     Done: "&7Cleared &a&o%COUNT% &7notes"
 
 UnPunish:
-  Usage: "&cUsage &8» &7&o/unpunish [ID]"
+  Usage: "&cUsage &8» &7&o/unpunish [ID] [Reason]"
   NotFound: "&cCould not find punishment #%ID%"
   Done: "&7Punishment &a&o#%ID% &7was successfully deleted!"
 
@@ -255,7 +255,22 @@ WarnsOwn:
     - "&7"
   Footer: "&7Page &e&o%CURRENT_PAGE% &7of &e&o%TOTAL_PAGES% &8| &7Active warnings: &e&o%COUNT%"
   PageFooter: "&7Use &e&o/warns %NEXT_PAGE% &7to see the next page"
-  
+
+RevokeNotes:
+  Usage: "&cUsage &8» &7&o/revokenotes [Name] <Page> &cor &7&o/revokenotes <Page>"
+  OutOfIndex: "&cThere is no page %PAGE%!"
+  NoEntries: "&c&o%NAME% has no revoke notes yet"
+  Header:
+    - "&7"
+    - "%PREFIX% &7Revoke Notes for %NAME%:"
+    - "&7"
+  Entry:
+    - "&7%DATE% &8| &7By &o%OPERATOR% &7(&c#%ID%&7)"
+    - "&8> &e%REASON%"
+    - "&7"
+  Footer: "&7Page &e&o%CURRENT_PAGE% &7of &e&o%TOTAL_PAGES% &8| &7Revoke Notes: &e&o%COUNT%"
+  PageFooter: "&7Use &e&o/revokenotes %NAME% %NEXT_PAGE% &7to see the next page"
+
 Notes:
   Usage: "&cUsage &8» &7&o/notes [Name] <Page> &cor &7&o/notes <Page>"
   OutOfIndex: "&cThere is no page %PAGE%!"
@@ -285,6 +300,20 @@ NotesOwn:
   Footer: "&7Page &e&o%CURRENT_PAGE% &7of &e&o%TOTAL_PAGES% &8| &7Notes: &e&o%COUNT%"
   PageFooter: "&7Use &e&o/notes %NEXT_PAGE% &7to see the next page"
 
+RevokeNotesOwn:
+  OutOfIndex: "&cThere is no page %PAGE%!"
+  NoEntries: "&c&oYou have no revoke notes yet"
+  Header:
+    - "&7"
+    - "%PREFIX% &7Your revoke notes:"
+    - "&7"
+  Entry:
+    - "&7%DATE% &8| &7By &o%OPERATOR% &7(&c#%ID%&7)"
+    - "&8> &e%REASON%"
+    - "&7"
+  Footer: "&7Page &e&o%CURRENT_PAGE% &7of &e&o%TOTAL_PAGES% &8| &7Revoke Notes: &e&o%COUNT%"
+  PageFooter: "&7Use &e&o/revokenotes %NEXT_PAGE% &7to see the next page"
+
 ChangeReason:
   Usage: "&cUsage &8» &7&o/change-reason [ID or ban/mute USER] [New reason]"
   Done: "&7Punishment &a&o#%ID% &7has successfully been updated!"
@@ -302,6 +331,7 @@ Check:
   BanReason: "  &cReason &8» &7%REASON%"
   Warn: "&cWarns &8» &7%COUNT%"
   Note: "&cNotes &8» &7%COUNT%"
+  RevokeNote: "&cRevoke Notes &8» &7%COUNT%"
   NotFound: "&cSorry we have not been able to find %NAME%"
   Cached: "&a&ocached"
   NotCached: "&c&onot cached"

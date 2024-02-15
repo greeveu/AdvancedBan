@@ -200,6 +200,12 @@ public class BungeeMethods implements MethodInterface {
             return;
         }
 
+        //If redis is not used we shouldn't try to search for the player on the network but keep it restricted to the bungeecord instance
+        if (!Universal.isRedis()) {
+            callback.accept(false);
+            return;
+        }
+
         //Check if the player is on the network
         String id = UUID.randomUUID().toString().replace("-", "");
 
